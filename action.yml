@@ -9,7 +9,7 @@ inputs:
     description: 'Path to the mobile application binary (apk/ipa)'
     required: true
   risk_threshold:
-    description: 'Minimum risk. Valid options are LOW, MEDIUM, HIGH, CRITICAL. Leave blank to ignore.'
+    description: 'Minimum risk. Valid options are LOW, MEDIUM, HIGH, CRITICAL. Defaults to "LOW"'
     required: true
     default: 'LOW'
 branding:

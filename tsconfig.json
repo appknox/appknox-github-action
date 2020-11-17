@@ -11,6 +11,7 @@
     "esModuleInterop": true,
     "declaration": false,
     "sourceMap": true,
+    "resolveJsonModule": true,
     "lib": ["es6"]
   },
   "exclude": ["node_modules", "**/*.test.ts"]
