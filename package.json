@@ -1,0 +1,25 @@
+{
+  "name": "appknox-github-action",
+  "version": "0.0.1",
+  "description": "Appknox Gtihub Action",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/appknox/appknox-github-action.git"
+  },
+  "keywords": [
+    "appknox",
+    "github",
+    "action"
+  ],
+  "author": "Appknox <engineering@appknox.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/appknox/appknox-github-action/issues"
+  },
+  "homepage": "https://github.com/appknox/appknox-github-action#readme"
+}
