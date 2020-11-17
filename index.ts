@@ -1,6 +1,4 @@
 const tc = require('@actions/tool-cache');
-const needle = require('needle')
-const http = require('http');
 const fs = require('fs');
 const pkg = require('./package.json');
 const { exec } = require("child_process");
@@ -67,9 +65,9 @@ function getAppknoxDownloadURL(os: string): string {
  */
 async function downloadFile(url: string): Promise<string> {
     try {
-        const file = await tc.downloadTool(url);
-        console.debug('File downloaded in ', file)
-        return file;
+        const filePath = await tc.downloadTool(url);
+        console.debug('File downloaded in ', filePath);
+        return filePath;
     } catch (error: any) {
         console.error('Error:File Download:', error);
         throw error;
@@ -103,20 +101,37 @@ async function installAppknox(os: string): Promise<string> {
     return supportedOS[os].path;
 }
 
+async function runCiCheck(fileId: number) {
+    // Execute 'cicheck ${file_id}' command
+    console.info(`Running: appknox cicheck ${fileId} --risk-threshold low`);
+    await exec(`appknox cicheck ${fileId} --risk-threshold low`, (error: any, stdout: number) => {
+        if (error) {
+            console.error(`exec error: ${error}`);
+            return;
+        }
+        console.log('stdout', stdout)
+    });
+}
+
+async function runUpload(filepath: string) {
+    // Execute 'appknox upload ${filepath}' command
+    console.info(`Running: appknox upload ${filepath}`)
+    await exec(`appknox upload ${filepath}`, (error: any, fileId: number) => {
+        if (error) {
+            console.error(`exec error: ${error}`);
+            return;
+        }
+        console.debug(`File ID: ${fileId}`);
+        runCiCheck(fileId);
+    });
+}
+
 async function upload(filepath: string) {
     console.debug(`Filepath: ${filepath}`);
 
     try {
         await installAppknox(os);
-        // Execute 'appknox upload ${filepath}' command
-        exec(`appknox upload ${filepath}`, (error: any, stdout: number) => {
-            if (error) {
-                console.error(`exec error: ${error}`);
-                return;
-            }
-            console.debug(`File ID: ${stdout}`);
-        });
-
+        await runUpload(filepath);
     } catch (err) {
         console.error('Upload Error: ', err);
         throw err;
