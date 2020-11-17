@@ -1,6 +1,6 @@
 {
   "name": "appknox-github-action",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Appknox Gtihub Action",
   "main": "index.js",
   "scripts": {
