@@ -30,11 +30,11 @@ In your Github action workflow file (eg: `.github/workflows/build.yml`), insert 
 
 ## Inputs
 
-| Key | Value |
-|-----|-------|-----------|
+| Key                     | Value                        |
+|-------------------------|------------------------------|
 | `appknox_access_token`  | Personal access token secret |
 | `file_path`             | File path to the mobile application binary to be uploaded |
-| `risk_threshold`        | Risk threshold value for which the CI should fail. <br><br>Accepted values: `CRITICAL | HIGH | MEDIUM | LOW` <br><br>Default: `LOW` |
+| `risk_threshold`        | Risk threshold value for which the CI should fail. <br><br>Accepted values: `CRITICAL, HIGH, MEDIUM & LOW` <br><br>Default: `LOW` |
 
 ---
 
