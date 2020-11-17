@@ -17,8 +17,9 @@ This action provides github action integration with Appknox.
 **Required** Risk threshold value for which the CI should fail. Default `"LOW"`
 
 ## Example usage
-
+```yaml
 uses: actions/appknox-github-action@v1.0
 with:
-  appknox_access_token: 'XXXXXXX'
+  appknox_access_token: 'XXXXXXXXXXXXXXXXXXXXX'
   file_path: 'app/build/outputs/apk/debug/app-debug.apk'
+```
