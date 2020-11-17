@@ -1,0 +1,20 @@
+name: 'Appknox GitHub action'
+description: 'Ensure your mobile application are secure'
+author: 'Appknox'
+inputs:
+  appknox_access_token:
+    description: 'Pesonal Access token on Appknox'
+    required: true
+  file_path:
+    description: 'Path to the mobile application binary (apk/ipa)'
+    required: true
+  risk_threshold:
+    description: 'Minimum risk. Valid options are LOW, MEDIUM, HIGH, CRITICAL. Leave blank to ignore.'
+    required: true
+    default: 'LOW'
+branding:
+  icon: 'shield'
+  color: 'blue'
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
