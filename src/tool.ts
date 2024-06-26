@@ -102,6 +102,25 @@ export async function upload(file_path: string): Promise<number> {
   return Number.parseInt(combinedOutput.output);
 }
 
+export async function sarifReport(
+  fileID: number
+): Promise<ExecOutput> {
+  const toolPath = await getAppknoxToolPath();
+  const args = [
+    'sarif',
+    fileID.toString(),
+  ];
+  const combinedOutput = await execBinary(toolPath, args);
+  if (combinedOutput.code > 0) {
+    const errArr = combinedOutput.err.split('\n').filter(_ => _);
+    const outArr = combinedOutput.output.split('\n').filter(_ => _);
+    const errMes = errArr[errArr.length - 1];
+    const outMes = outArr[outArr.length - 1];
+    throw new Error(errMes + '. ' + outMes);
+  }
+  return combinedOutput;
+}
+
 export async function cicheck(
   riskThreshold: RiskThresholdOptions,
   fileID: number

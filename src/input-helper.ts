@@ -1,5 +1,5 @@
 import * as core from '@actions/core';
-import {Inputs, RiskThresholdOptions} from './constants';
+import {Inputs, RiskThresholdOptions, SarifOptions} from './constants';
 import {AppknoxInputs} from './appknox-inputs';
 
 /**
@@ -10,9 +10,20 @@ export function getInputs(): AppknoxInputs {
     required: true
   });
   const path = core.getInput(Inputs.Path, {required: true});
+  const sarifStringInput = core.getInput(Inputs.Sarif) || SarifOptions.Disable;
+  const sarifString: SarifOptions = SarifOptions[sarifStringInput];
 
-  const riskThresholdInput =
-    core.getInput(Inputs.RiskThreshold) || RiskThresholdOptions.LOW;
+  if (!sarifString) {
+    core.setFailed(
+      `Unrecognized ${
+        Inputs.Sarif
+      } input. Provided: ${sarifString}. Available options: ${Object.keys(
+        SarifOptions
+      )}`
+    );
+  }
+
+  const riskThresholdInput = core.getInput(Inputs.RiskThreshold) || RiskThresholdOptions.LOW;
   const riskThreshold: RiskThresholdOptions =
     RiskThresholdOptions[riskThresholdInput];
 
@@ -29,7 +40,8 @@ export function getInputs(): AppknoxInputs {
   const inputs = {
     appknoxAccessToken: accessToken,
     filePath: path,
-    riskThreshold: riskThreshold
+    riskThreshold: riskThreshold,
+    sarif: sarifString
   } as AppknoxInputs;
   return inputs;
 }

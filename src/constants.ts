@@ -1,7 +1,20 @@
 export enum Inputs {
   AppknoxAccessToken = 'appknox_access_token',
   Path = 'file_path',
-  RiskThreshold = 'risk_threshold'
+  RiskThreshold = 'risk_threshold',
+  Sarif = 'sarif',
+}
+
+export enum SarifOptions {
+  /**
+   * Will upload the sarif report in codeQL
+   */
+  Enable = 'Enable',
+
+  /**
+   * Default. Will not upload the sarif report in codeQL
+   */
+  Disable = 'Disable'
 }
 
 export enum RiskThresholdOptions {
@@ -26,4 +39,4 @@ export enum RiskThresholdOptions {
   CRITICAL = 'CRITICAL'
 }
 
-export const binaryVersion = '1.2.0';
+export const binaryVersion = '1.4.0';
