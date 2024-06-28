@@ -1,4 +1,4 @@
-import {RiskThresholdOptions} from './constants';
+import {RiskThresholdOptions, SarifOptions} from './constants';
 
 export interface AppknoxInputs {
   /**
@@ -15,4 +15,9 @@ export interface AppknoxInputs {
    * Minimum risk to fail CI
    */
   riskThreshold: RiskThresholdOptions;
+
+  /**
+   * Enable SARIF format
+   */
+  sarif: SarifOptions;
 }
