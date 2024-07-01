@@ -24,8 +24,8 @@ In your Github action workflow file (eg: `.github/workflows/build.yml`), insert 
   uses: appknox/appknox-github-action@1.1.0
   with:
     appknox_access_token: ${{ secrets.APPKNOX_ACCESS_TOKEN }}
-    file_path: app/build/outputs/bundle/debug/app.aab
-    risk_threshold: MEDIUM
+    file_path: app/build/outputs/apk/debug/app-debug.apk
+    risk_threshold: HIGH
 ```
 
 ## Inputs
