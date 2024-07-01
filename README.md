@@ -63,14 +63,14 @@ jobs:
     - name: Build the app
       run: ./gradlew build
     - name: Appknox GitHub action
-      uses: appknox/appknox-github-action@1.0.0
+      uses: appknox/appknox-github-action@1.1.0
       with:
         appknox_access_token: ${{ secrets.APPKNOX_ACCESS_TOKEN }}
         file_path: app/build/outputs/apk/debug/app-debug.apk
         risk_threshold: MEDIUM
-        sarif: Enable
 ```
 ### Appknox Scan with Downloadable SARIF File
+_This example demonstrates how to run Appknox Scan to generate a SARIF report and download it as an artifact._
 ```yml
     name: Build
     on:
@@ -91,7 +91,7 @@ jobs:
         - name: Build the app
           run: ./gradlew build
         - name: Appknox GitHub action
-          uses: appknox/appknox-github-action@1.0.0
+          uses: appknox/appknox-github-action@1.1.0
           with:
             appknox_access_token: ${{ secrets.APPKNOX_ACCESS_TOKEN }}
             file_path: app/build/outputs/apk/debug/app-debug.apk
@@ -127,7 +127,7 @@ jobs:
         - name: Build the app
           run: ./gradlew build
         - name: Appknox GitHub action
-          uses: appknox/appknox-github-action@1.0.0
+          uses: appknox/appknox-github-action@1.1.0
           with:
             appknox_access_token: ${{ secrets.APPKNOX_ACCESS_TOKEN }}
             file_path: app/build/outputs/apk/debug/app-debug.apk
