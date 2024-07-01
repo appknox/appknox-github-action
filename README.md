@@ -105,6 +105,7 @@ jobs:
             path: report.sarif
 ```
 ### Upload Appknox Scan Report to GitHub Code Scanning
+**Note:** _For integrating with GitHub Advanced Security (GHAS), ensure you have an active GitHub account with the Advanced Security feature enabled._
 
 ```yml
     name: Build
