@@ -21,12 +21,11 @@ Go to your app's repository settings in Github, click on Secrets in sidebar and 
 In your Github action workflow file (eg: `.github/workflows/build.yml`), insert the following content after the app build step:
 ```yml
 - name: Appknox Scan
-  uses: appknox/appknox-github-action@1.0.0
+  uses: appknox/appknox-github-action@1.1.0
   with:
     appknox_access_token: ${{ secrets.APPKNOX_ACCESS_TOKEN }}
     file_path: app/build/outputs/bundle/debug/app.aab
     risk_threshold: MEDIUM
-    sarif: Enable
 ```
 
 ## Inputs
@@ -36,7 +35,7 @@ In your Github action workflow file (eg: `.github/workflows/build.yml`), insert 
 | `appknox_access_token`  | Personal access token secret |
 | `file_path`             | File path to the mobile application binary to be uploaded |
 | `risk_threshold`        | Risk threshold value for which the CI should fail. <br><br>Accepted values: `CRITICAL, HIGH, MEDIUM & LOW` <br><br>Default: `LOW` |
-| `sarif`        | Enables SARIF report generation. <br><br>Accepted values: `Enable & Disable` <br><br>Default: `Disable` |
+| `sarif`                 | Enables SARIF report generation. <br><br>Accepted values: `Enable & Disable` <br><br>Default: `Disable` |
 
 ---
 
