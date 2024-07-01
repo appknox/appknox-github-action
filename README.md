@@ -24,8 +24,9 @@ In your Github action workflow file (eg: `.github/workflows/build.yml`), insert 
   uses: appknox/appknox-github-action@1.0.0
   with:
     appknox_access_token: ${{ secrets.APPKNOX_ACCESS_TOKEN }}
-    file_path: app/build/outputs/apk/debug/app-debug.apk
-    risk_threshold: HIGH
+    file_path: app/build/outputs/bundle/debug/app.aab
+    risk_threshold: MEDIUM
+    sarif: Enable
 ```
 
 ## Inputs
@@ -35,10 +36,13 @@ In your Github action workflow file (eg: `.github/workflows/build.yml`), insert 
 | `appknox_access_token`  | Personal access token secret |
 | `file_path`             | File path to the mobile application binary to be uploaded |
 | `risk_threshold`        | Risk threshold value for which the CI should fail. <br><br>Accepted values: `CRITICAL, HIGH, MEDIUM & LOW` <br><br>Default: `LOW` |
+| `sarif`        | Enables SARIF report generation. <br><br>Accepted values: `Enable & Disable` <br><br>Default: `Disable` |
 
 ---
 
-Example:
+## Examples:
+
+### Running Appknox Scan for Vulnerability Detection
 ```yml
 name: Build
 on:
@@ -64,5 +68,73 @@ jobs:
         appknox_access_token: ${{ secrets.APPKNOX_ACCESS_TOKEN }}
         file_path: app/build/outputs/apk/debug/app-debug.apk
         risk_threshold: MEDIUM
+        sarif: Enable
 ```
+### Appknox Scan with Downloadable SARIF File
+```yml
+    name: Build
+    on:
+      push:
+        branches:
+          - master
+    jobs:
+      build:
+        runs-on: ubuntu-latest
+        steps:
+        - uses: actions/checkout@v2
+        - name: Set up JDK 1.8
+          uses: actions/setup-java@v1
+          with:
+            java-version: 1.8
+        - name: Grant execute permission for gradlew
+          run: chmod +x gradlew
+        - name: Build the app
+          run: ./gradlew build
+        - name: Appknox GitHub action
+          uses: appknox/appknox-github-action@1.0.0
+          with:
+            appknox_access_token: ${{ secrets.APPKNOX_ACCESS_TOKEN }}
+            file_path: app/build/outputs/apk/debug/app-debug.apk
+            risk_threshold: MEDIUM
+            sarif: Enable
+        - name: Download SARIF Report
+          if: always()
+          uses: actions/upload-artifact@v2
+          with:
+            name: sarif-report
+            path: report.sarif
+```
+### Upload Appknox Scan Report to GitHub Code Scanning
 
+```yml
+    name: Build
+    on:
+      push:
+        branches:
+          - master
+    jobs:
+      build:
+        runs-on: ubuntu-latest
+        steps:
+        - uses: actions/checkout@v2
+        - name: Set up JDK 1.8
+          uses: actions/setup-java@v1
+          with:
+            java-version: 1.8
+        - name: Grant execute permission for gradlew
+          run: chmod +x gradlew
+        - name: Build the app
+          run: ./gradlew build
+        - name: Appknox GitHub action
+          uses: appknox/appknox-github-action@1.0.0
+          with:
+            appknox_access_token: ${{ secrets.APPKNOX_ACCESS_TOKEN }}
+            file_path: app/build/outputs/apk/debug/app-debug.apk
+            risk_threshold: MEDIUM
+            sarif: Enable
+        - name: Upload SARIF to GHAS
+          if: always()
+          uses: github/codeql-action/upload-sarif@v3
+          with:
+            sarif_file: report.sarif
+```
