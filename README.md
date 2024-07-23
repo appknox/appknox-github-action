@@ -21,7 +21,7 @@ Go to your app's repository settings in Github, click on Secrets in sidebar and 
 In your Github action workflow file (eg: `.github/workflows/build.yml`), insert the following content after the app build step:
 ```yml
 - name: Appknox Scan
-  uses: appknox/appknox-github-action@1.1.1
+  uses: appknox/appknox-github-action@1.1.2
   with:
     appknox_access_token: ${{ secrets.APPKNOX_ACCESS_TOKEN }}
     file_path: app/build/outputs/apk/debug/app-debug.apk
@@ -62,7 +62,7 @@ jobs:
     - name: Build the app
       run: ./gradlew build
     - name: Appknox GitHub action
-      uses: appknox/appknox-github-action@1.1.1
+      uses: appknox/appknox-github-action@1.1.2
       with:
         appknox_access_token: ${{ secrets.APPKNOX_ACCESS_TOKEN }}
         file_path: app/build/outputs/apk/debug/app-debug.apk
@@ -90,7 +90,7 @@ _This example demonstrates how to run Appknox Scan to generate a SARIF report an
         - name: Build the app
           run: ./gradlew build
         - name: Appknox GitHub action
-          uses: appknox/appknox-github-action@1.1.1
+          uses: appknox/appknox-github-action@1.1.2
           with:
             appknox_access_token: ${{ secrets.APPKNOX_ACCESS_TOKEN }}
             file_path: app/build/outputs/apk/debug/app-debug.apk
@@ -126,7 +126,7 @@ _This example demonstrates how to run Appknox Scan to generate a SARIF report an
         - name: Build the app
           run: ./gradlew build
         - name: Appknox GitHub action
-          uses: appknox/appknox-github-action@1.1.1
+          uses: appknox/appknox-github-action@1.1.2
           with:
             appknox_access_token: ${{ secrets.APPKNOX_ACCESS_TOKEN }}
             file_path: app/build/outputs/apk/debug/app-debug.apk
