@@ -29432,7 +29432,7 @@ var RiskThresholdOptions;
      */
     RiskThresholdOptions["CRITICAL"] = "CRITICAL";
 })(RiskThresholdOptions = exports.RiskThresholdOptions || (exports.RiskThresholdOptions = {}));
-exports.binaryVersion = '1.4.0';
+exports.binaryVersion = '1.4.1';
 
 
 /***/ }),
