@@ -7,25 +7,15 @@ import {binaryVersion, RiskThresholdOptions} from './constants';
 interface AppknoxBinaryConfig {
   name: string;
 }
+
 type OSAppknoxBinaryMap = Record<string, AppknoxBinaryConfig>;
 
 const supportedOS: OSAppknoxBinaryMap = {
-  linux: {
-    name: 'appknox-Linux-x86_64'
-  },
-  darwin: {
-    name: 'appknox-Darwin-x86_64'
-  },
-  win32: {
-    name: 'appknox-Windows-x86_64.exe'
-  }
+  linux: { name: 'appknox-Linux-x86_64' },
+  darwin: { name: 'appknox-Darwin-x86_64' },
+  win32: { name: 'appknox-Windows-x86_64.exe' }
 };
 
-/**
- * Gets appknox binary download url
- * @param os
- * @returns url
- */
 function getAppknoxDownloadURL(os: string): string {
   if (!(os in supportedOS)) {
     throw Error(`Unsupported os ${os}`);
@@ -66,7 +56,8 @@ async function execBinary(
 
   const options = {
     listeners: {},
-    ignoreReturnCode: true
+    ignoreReturnCode: true,
+    env: { ...process.env } // Ensure the API_HOST is available in the environment variables
   };
   options.listeners = {
     stdout: (data: Buffer) => {

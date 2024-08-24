@@ -1,9 +1,9 @@
 name: 'Appknox GitHub action'
-description: 'Ensure your mobile application are secure'
+description: 'Ensure your mobile applications are secure'
 author: 'Appknox'
 inputs:
   appknox_access_token:
-    description: 'Pesonal Access token on Appknox'
+    description: 'Personal Access token on Appknox'
     required: true
   file_path:
     description: 'Path to the mobile application binary (apk/ipa)'
@@ -15,6 +15,10 @@ inputs:
   sarif:
     description: 'Enable SARIF format report. Defaults to false'
     default: 'Disable'
+  api_host:  # New input parameter
+    description: 'The API host to use. Can be a region like "uae", "saudi", "europe", or a custom URL'
+    required: false
+    default: 'secure.appknox.com'  # Default to the standard API host
 branding:
   icon: 'shield'
   color: 'blue'
