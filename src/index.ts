@@ -7,6 +7,9 @@ async function run(): Promise<void> {
     const inputs = getInputs();
     core.exportVariable('APPKNOX_ACCESS_TOKEN', inputs.appknoxAccessToken);
 
+    // Log the api_host value
+    core.info(`API Host: ${inputs.apiHost}`);
+
     // Set the API host if provided
     if (inputs.apiHost) {
       core.exportVariable('APPKNOX_API_HOST', inputs.apiHost);
@@ -15,12 +18,12 @@ async function run(): Promise<void> {
     await whoami();
     const fileID = await upload(inputs.filePath);
     const sarif = inputs.sarif;
-    if (sarif === 'Enable'){
+    if (sarif === 'Enable') {
       await sarifReport(fileID);
     }
     await cicheck(inputs.riskThreshold, fileID);
   } catch (err: any) {
-      core.setFailed(err.message);
+    core.setFailed(err.message);
   }
 }
 

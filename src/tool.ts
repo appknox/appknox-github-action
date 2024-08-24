@@ -54,11 +54,19 @@ async function execBinary(
   let output = '';
   let err = '';
 
+  const filteredEnv: { [key: string]: string } = {};
+  for (const key in process.env) {
+    if (process.env[key] !== undefined) {
+      filteredEnv[key] = process.env[key] as string;
+    }
+  }
+  
   const options = {
     listeners: {},
     ignoreReturnCode: true,
-    env: { ...process.env } // Ensure the API_HOST is available in the environment variables
+    env: filteredEnv // Use the filtered environment variables
   };
+  
   options.listeners = {
     stdout: (data: Buffer) => {
       output += data.toString();
