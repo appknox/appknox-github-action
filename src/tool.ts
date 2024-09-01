@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import * as tc from '@actions/tool-cache';
 import * as exec from '@actions/exec';
-import {binaryVersion, RiskThresholdOptions} from './constants';
+import { binaryVersion, RiskThresholdOptions } from './constants';
 
 interface AppknoxBinaryConfig {
   name: string;
@@ -49,7 +49,8 @@ interface ExecOutput {
 
 async function execBinary(
   path: string,
-  args: Array<string>
+  args: Array<string>,
+  apiHost?: string // Optional apiHost parameter
 ): Promise<ExecOutput> {
   let output = '';
   let err = '';
@@ -60,13 +61,18 @@ async function execBinary(
       filteredEnv[key] = process.env[key] as string;
     }
   }
-  
+
+  // Add the API host to the environment if provided
+  if (apiHost) {
+    filteredEnv['APPKNOX_API_HOST'] = apiHost;
+  }
+
   const options = {
     listeners: {},
     ignoreReturnCode: true,
     env: filteredEnv // Use the filtered environment variables
   };
-  
+
   options.listeners = {
     stdout: (data: Buffer) => {
       output += data.toString();
@@ -83,17 +89,17 @@ async function execBinary(
   };
 }
 
-export async function whoami(): Promise<void> {
+export async function whoami(apiHost?: string): Promise<void> {
   const toolPath = await getAppknoxToolPath();
-  const combinedOutput = await execBinary(toolPath, ['whoami']);
+  const combinedOutput = await execBinary(toolPath, ['whoami'], apiHost);
   if (combinedOutput.err.indexOf('Invalid token') > -1) {
     throw new Error('Invalid token');
   }
 }
 
-export async function upload(file_path: string): Promise<number> {
+export async function upload(file_path: string, apiHost?: string): Promise<number> {
   const toolPath = await getAppknoxToolPath();
-  const combinedOutput = await execBinary(toolPath, ['upload', file_path]);
+  const combinedOutput = await execBinary(toolPath, ['upload', file_path], apiHost);
   if (combinedOutput.code > 0) {
     const errArr = combinedOutput.err.split('\n').filter(_ => _);
     throw new Error(errArr[errArr.length - 1]);
@@ -102,14 +108,15 @@ export async function upload(file_path: string): Promise<number> {
 }
 
 export async function sarifReport(
-  fileID: number
+  fileID: number,
+  apiHost?: string
 ): Promise<ExecOutput> {
   const toolPath = await getAppknoxToolPath();
   const args = [
     'sarif',
     fileID.toString(),
   ];
-  const combinedOutput = await execBinary(toolPath, args);
+  const combinedOutput = await execBinary(toolPath, args, apiHost);
   if (combinedOutput.code > 0) {
     const errArr = combinedOutput.err.split('\n').filter(_ => _);
     const outArr = combinedOutput.output.split('\n').filter(_ => _);
@@ -122,7 +129,8 @@ export async function sarifReport(
 
 export async function cicheck(
   riskThreshold: RiskThresholdOptions,
-  fileID: number
+  fileID: number,
+  apiHost?: string
 ): Promise<void> {
   const toolPath = await getAppknoxToolPath();
   const args = [
@@ -131,7 +139,7 @@ export async function cicheck(
     '--risk-threshold',
     riskThreshold
   ];
-  const combinedOutput = await execBinary(toolPath, args);
+  const combinedOutput = await execBinary(toolPath, args, apiHost);
   if (combinedOutput.code > 0) {
     const errArr = combinedOutput.err.split('\n').filter(_ => _);
     const outArr = combinedOutput.output.split('\n').filter(_ => _);

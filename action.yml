@@ -1,9 +1,9 @@
-name: 'Appknox GitHub action'
+name: 'Appknox GitHub Action'
 description: 'Ensure your mobile applications are secure'
 author: 'Appknox'
 inputs:
   appknox_access_token:
-    description: 'Personal Access token on Appknox'
+    description: 'Personal Access Token on Appknox'
     required: true
   file_path:
     description: 'Path to the mobile application binary (apk/ipa)'

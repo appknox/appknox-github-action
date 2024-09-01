@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
-import {cicheck, upload, whoami, sarifReport} from './tool';
-import {getInputs} from './input-helper';
+import { cicheck, upload, whoami, sarifReport } from './tool';
+import { getInputs } from './input-helper';
 
 async function run(): Promise<void> {
   try {
@@ -15,13 +15,20 @@ async function run(): Promise<void> {
       core.exportVariable('APPKNOX_API_HOST', inputs.apiHost);
     }
 
-    await whoami();
-    const fileID = await upload(inputs.filePath);
-    const sarif = inputs.sarif;
-    if (sarif === 'Enable') {
-      await sarifReport(fileID);
+    // Ensure API host is used in the whoami function or any other function that requires it
+    await whoami(inputs.apiHost);
+
+    // Upload file and get file ID
+    const fileID = await upload(inputs.filePath, inputs.apiHost);
+
+    // Generate SARIF report if enabled
+    if (inputs.sarif === 'Enable') {
+      await sarifReport(fileID, inputs.apiHost);
     }
-    await cicheck(inputs.riskThreshold, fileID);
+
+    // Run CICheck with the specified risk threshold
+    await cicheck(inputs.riskThreshold, fileID, inputs.apiHost);
+
   } catch (err: any) {
     core.setFailed(err.message);
   }
