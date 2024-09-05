@@ -26,6 +26,7 @@ In your Github action workflow file (eg: `.github/workflows/build.yml`), insert 
     appknox_access_token: ${{ secrets.APPKNOX_ACCESS_TOKEN }}
     file_path: app/build/outputs/apk/debug/app-debug.apk
     risk_threshold: HIGH
+    api_host: secure.appknox.com
 ```
 
 ## Inputs
@@ -36,6 +37,7 @@ In your Github action workflow file (eg: `.github/workflows/build.yml`), insert 
 | `file_path`             | File path to the mobile application binary to be uploaded |
 | `risk_threshold`        | Risk threshold value for which the CI should fail. <br><br>Accepted values: `CRITICAL, HIGH, MEDIUM & LOW` <br><br>Default: `LOW` |
 | `sarif`                 | Enables SARIF report generation. <br><br>Accepted values: `Enable & Disable` <br><br>Default: `Disable` |
+| `api_host`              | The API host to use. Can be a region like `"uae"`, `"saudi"`, `"europe"`, or a custom URL. |
 
 ---
 
@@ -96,6 +98,7 @@ _This example demonstrates how to run Appknox Scan to generate a SARIF report an
             file_path: app/build/outputs/apk/debug/app-debug.apk
             risk_threshold: MEDIUM
             sarif: Enable
+            api_host: secure.appknox.com
         - name: Download SARIF Report
           if: always()
           uses: actions/upload-artifact@v2
@@ -132,6 +135,7 @@ _This example demonstrates how to run Appknox Scan to generate a SARIF report an
             file_path: app/build/outputs/apk/debug/app-debug.apk
             risk_threshold: MEDIUM
             sarif: Enable
+            api_host: secure.appknox.com
         - name: Upload SARIF to GHAS
           if: always()
           uses: github/codeql-action/upload-sarif@v3
