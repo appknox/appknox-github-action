@@ -106,3 +106,5 @@ lib/
 tmp/
 tool_cache/
 /.idea
+package-lock.json~
+package-lock.json
