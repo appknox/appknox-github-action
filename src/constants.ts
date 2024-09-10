@@ -3,7 +3,7 @@ export enum Inputs {
   Path = 'file_path',
   RiskThreshold = 'risk_threshold',
   Sarif = 'sarif',
-  ApiHost = 'api_host'  // New input for API Host
+  Region = 'region'  // New input for Region
 }
 
 export enum SarifOptions {

@@ -15,10 +15,10 @@ inputs:
   sarif:
     description: 'Enable SARIF format report. Defaults to false'
     default: 'Disable'
-  api_host:  # New input parameter
-    description: 'The API host to use. Can be a region like "uae", "saudi", "europe", or a custom URL'
+  region:  # New input parameter
+    description: 'The Appknox Regions to use. Can be a region like `"Global"`, `"Saudi"`. By default it is `"Global"`'
     required: false
-    default: 'secure.appknox.com'  # Default to the standard API host
+    default: 'secure.appknox.com'  # Default to the standard region
 branding:
   icon: 'shield'
   color: 'blue'

@@ -5,5 +5,5 @@ export interface AppknoxInputs {
   filePath: string;
   riskThreshold: RiskThresholdOptions;
   sarif: SarifOptions;
-  apiHost?: string;  // Optional API Host parameter
+  region?: string;  // Optional Region parameter
 }

@@ -30,4 +30,4 @@ jobs:
           appknox_access_token: ${{ secrets.APPKNOX_ACCESS_TOKEN }}
           file_path: app/build/outputs/apk/debug/app-debug.apk
           risk_threshold: HIGH
-          api_host: 'https://api.appknox.com/api'
+          region: 'https://api.appknox.com/api'

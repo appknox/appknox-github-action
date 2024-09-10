@@ -7,27 +7,27 @@ async function run(): Promise<void> {
     const inputs = getInputs();
     core.exportVariable('APPKNOX_ACCESS_TOKEN', inputs.appknoxAccessToken);
 
-    // Log the api_host value
-    core.info(`API Host: ${inputs.apiHost}`);
+    // Log the region value
+    core.info(`Region: ${inputs.region}`);
 
-    // Set the API host if provided
-    if (inputs.apiHost) {
-      core.exportVariable('APPKNOX_API_HOST', inputs.apiHost);
+    // Set the Region if provided
+    if (inputs.region) {
+      core.exportVariable('APPKNOX_REGION', inputs.region);
     }
 
-    // Ensure API host is used in the whoami function or any other function that requires it
-    await whoami(inputs.apiHost);
+    // Ensure Region is used in the whoami function or any other function that requires it
+    await whoami(inputs.region);
 
     // Upload file and get file ID
-    const fileID = await upload(inputs.filePath, inputs.apiHost);
+    const fileID = await upload(inputs.filePath, inputs.region);
 
     // Generate SARIF report if enabled
     if (inputs.sarif === 'Enable') {
-      await sarifReport(fileID, inputs.apiHost);
+      await sarifReport(fileID, inputs.region);
     }
 
     // Run CICheck with the specified risk threshold
-    await cicheck(inputs.riskThreshold, fileID, inputs.apiHost);
+    await cicheck(inputs.riskThreshold, fileID, inputs.region);
 
   } catch (err: any) {
     core.setFailed(err.message);
