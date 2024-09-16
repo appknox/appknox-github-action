@@ -9,7 +9,7 @@ export function getInputs(): AppknoxInputs {
   const accessToken = core.getInput(Inputs.AppknoxAccessToken, {
     required: true
   });
-  const path = core.getInput(Inputs.Path, { required: true });
+  const path = core.getInput(Inputs.Path, {required: true});
   const sarifStringInput = core.getInput(Inputs.Sarif) || SarifOptions.Disable;
   const sarifString: SarifOptions = SarifOptions[sarifStringInput];
 
