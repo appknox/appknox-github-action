@@ -2,8 +2,13 @@ import * as core from '@actions/core';
 import {Inputs, RiskThresholdOptions, SarifOptions} from './constants';
 import {AppknoxInputs} from './appknox-inputs';
 
+/**
+ * Helper to get all the inputs for the action
+ */
 export function getInputs(): AppknoxInputs {
-  const accessToken = core.getInput(Inputs.AppknoxAccessToken, { required: true });
+  const accessToken = core.getInput(Inputs.AppknoxAccessToken, {
+    required: true
+  });
   const path = core.getInput(Inputs.Path, { required: true });
   const sarifStringInput = core.getInput(Inputs.Sarif) || SarifOptions.Disable;
   const sarifString: SarifOptions = SarifOptions[sarifStringInput];
@@ -19,7 +24,8 @@ export function getInputs(): AppknoxInputs {
   }
 
   const riskThresholdInput = core.getInput(Inputs.RiskThreshold) || RiskThresholdOptions.LOW;
-  const riskThreshold: RiskThresholdOptions = RiskThresholdOptions[riskThresholdInput];
+  const riskThreshold: RiskThresholdOptions =
+    RiskThresholdOptions[riskThresholdInput];
 
   if (!riskThreshold) {
     core.setFailed(

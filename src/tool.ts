@@ -2,20 +2,30 @@ import path from 'path';
 import fs from 'fs';
 import * as tc from '@actions/tool-cache';
 import * as exec from '@actions/exec';
-import { binaryVersion, RiskThresholdOptions } from './constants';
+import {binaryVersion, RiskThresholdOptions} from './constants';
 
 interface AppknoxBinaryConfig {
   name: string;
 }
-
 type OSAppknoxBinaryMap = Record<string, AppknoxBinaryConfig>;
 
 const supportedOS: OSAppknoxBinaryMap = {
-  linux: { name: 'appknox-Linux-x86_64' },
-  darwin: { name: 'appknox-Darwin-x86_64' },
-  win32: { name: 'appknox-Windows-x86_64.exe' }
+  linux: {
+    name: 'appknox-Linux-x86_64'
+  },
+  darwin: {
+    name: 'appknox-Darwin-x86_64'
+  },
+  win32: {
+    name: 'appknox-Windows-x86_64.exe'
+  }
 };
 
+/**
+ * Gets appknox binary download url
+ * @param os
+ * @returns url
+ */
 function getAppknoxDownloadURL(os: string): string {
   if (!(os in supportedOS)) {
     throw Error(`Unsupported os ${os}`);

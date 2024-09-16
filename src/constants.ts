@@ -11,10 +11,37 @@ export enum SarifOptions {
   Disable = 'Disable'
 }
 
+export enum SarifOptions {
+  /**
+   * Will upload the sarif report in codeQL
+   */
+  Enable = 'Enable',
+
+  /**
+   * Default. Will not upload the sarif report in codeQL
+   */
+  Disable = 'Disable'
+}
+
 export enum RiskThresholdOptions {
+  /**
+   * Default. Fail the action if risk is "LOW" or higher
+   */
   LOW = 'LOW',
+
+  /**
+   * Fail the action if risk is "MEDIUM" or higher
+   */
   MEDIUM = 'MEDIUM',
+
+  /**
+   * Fail the action if risk is "HIGH" or higher
+   */
   HIGH = 'HIGH',
+
+  /**
+   * Fail the action if risk is "CRITICAL"
+   */
   CRITICAL = 'CRITICAL'
 }
 

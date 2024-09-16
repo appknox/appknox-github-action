@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
-import { cicheck, upload, whoami, sarifReport } from './tool';
-import { getInputs } from './input-helper';
+import {cicheck, upload, whoami, sarifReport} from './tool';
+import {getInputs} from './input-helper';
 
 async function run(): Promise<void> {
   try {
@@ -30,7 +30,7 @@ async function run(): Promise<void> {
     await cicheck(inputs.riskThreshold, fileID, inputs.region);
 
   } catch (err: any) {
-    core.setFailed(err.message);
+      core.setFailed(err.message);
   }
 }
 
