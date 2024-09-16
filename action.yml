@@ -1,5 +1,5 @@
-name: 'Appknox GitHub Action'
-description: 'Ensure your mobile applications are secure'
+name: 'Appknox GitHub action'
+description: 'Ensure your mobile application are secure'
 author: 'Appknox'
 inputs:
   appknox_access_token:
