@@ -59,15 +59,30 @@ interface ExecOutput {
 
 async function execBinary(
   path: string,
-  args: Array<string>
+  args: Array<string>,
+  region?: string // Optional region parameter
 ): Promise<ExecOutput> {
   let output = '';
   let err = '';
 
+  const filteredEnv: { [key: string]: string } = {};
+  for (const key in process.env) {
+    if (process.env[key] !== undefined) {
+      filteredEnv[key] = process.env[key] as string;
+    }
+  }
+
+  // Add the Region to the environment if provided
+  if (region) {
+    filteredEnv['APPKNOX_REGION'] = region;
+  }
+
   const options = {
     listeners: {},
-    ignoreReturnCode: true
+    ignoreReturnCode: true,
+    env: filteredEnv // Use the filtered environment variables
   };
+
   options.listeners = {
     stdout: (data: Buffer) => {
       output += data.toString();
@@ -84,17 +99,17 @@ async function execBinary(
   };
 }
 
-export async function whoami(): Promise<void> {
+export async function whoami(region?: string): Promise<void> {
   const toolPath = await getAppknoxToolPath();
-  const combinedOutput = await execBinary(toolPath, ['whoami']);
+  const combinedOutput = await execBinary(toolPath, ['whoami'], region);
   if (combinedOutput.err.indexOf('Invalid token') > -1) {
     throw new Error('Invalid token');
   }
 }
 
-export async function upload(file_path: string): Promise<number> {
+export async function upload(file_path: string, region?: string): Promise<number> {
   const toolPath = await getAppknoxToolPath();
-  const combinedOutput = await execBinary(toolPath, ['upload', file_path]);
+  const combinedOutput = await execBinary(toolPath, ['upload', file_path],region);
   if (combinedOutput.code > 0) {
     const errArr = combinedOutput.err.split('\n').filter(_ => _);
     throw new Error(errArr[errArr.length - 1]);
@@ -103,14 +118,15 @@ export async function upload(file_path: string): Promise<number> {
 }
 
 export async function sarifReport(
-  fileID: number
+  fileID: number,
+  region?: string
 ): Promise<ExecOutput> {
   const toolPath = await getAppknoxToolPath();
   const args = [
     'sarif',
     fileID.toString(),
   ];
-  const combinedOutput = await execBinary(toolPath, args);
+  const combinedOutput = await execBinary(toolPath, args, region);
   if (combinedOutput.code > 0) {
     const errArr = combinedOutput.err.split('\n').filter(_ => _);
     const outArr = combinedOutput.output.split('\n').filter(_ => _);
@@ -123,7 +139,8 @@ export async function sarifReport(
 
 export async function cicheck(
   riskThreshold: RiskThresholdOptions,
-  fileID: number
+  fileID: number,
+  region?: string
 ): Promise<void> {
   const toolPath = await getAppknoxToolPath();
   const args = [
@@ -132,7 +149,7 @@ export async function cicheck(
     '--risk-threshold',
     riskThreshold
   ];
-  const combinedOutput = await execBinary(toolPath, args);
+  const combinedOutput = await execBinary(toolPath, args, region);
   if (combinedOutput.code > 0) {
     const errArr = combinedOutput.err.split('\n').filter(_ => _);
     const outArr = combinedOutput.output.split('\n').filter(_ => _);

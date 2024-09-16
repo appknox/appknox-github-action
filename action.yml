@@ -3,7 +3,7 @@ description: 'Ensure your mobile application are secure'
 author: 'Appknox'
 inputs:
   appknox_access_token:
-    description: 'Pesonal Access token on Appknox'
+    description: 'Personal Access Token on Appknox'
     required: true
   file_path:
     description: 'Path to the mobile application binary (apk/ipa)'
@@ -15,6 +15,10 @@ inputs:
   sarif:
     description: 'Enable SARIF format report. Defaults to false'
     default: 'Disable'
+  region:  # New input parameter
+    description: 'The Appknox Regions to use. Can be a region like `"Global"`, `"Saudi"`. By default it is `"Global"`'
+    required: false
+    default: 'secure.appknox.com'  # Default to the standard region
 branding:
   icon: 'shield'
   color: 'blue'
