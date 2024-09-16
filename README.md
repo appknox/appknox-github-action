@@ -99,7 +99,6 @@ _This example demonstrates how to run Appknox Scan to generate a SARIF report an
             file_path: app/build/outputs/apk/debug/app-debug.apk
             risk_threshold: MEDIUM
             sarif: Enable
-            region: Global
         - name: Download SARIF Report
           if: always()
           uses: actions/upload-artifact@v2
@@ -136,7 +135,6 @@ _This example demonstrates how to run Appknox Scan to generate a SARIF report an
             file_path: app/build/outputs/apk/debug/app-debug.apk
             risk_threshold: MEDIUM
             sarif: Enable
-            region: Global
         - name: Upload SARIF to GHAS
           if: always()
           uses: github/codeql-action/upload-sarif@v3
