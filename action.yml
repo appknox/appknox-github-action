@@ -16,7 +16,7 @@ inputs:
     description: 'Enable SARIF format report. Defaults to false'
     default: 'Disable'
 branding:
-  icon: 'shield'
+  icon: 'images/appknox.svg'
   color: 'blue'
 runs:
   using: 'node16'
