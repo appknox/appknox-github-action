@@ -138,3 +138,6 @@ _This example demonstrates how to run Appknox Scan to generate a SARIF report an
           with:
             sarif_file: report.sarif
 ```
+**View reported vulnerabilities in GitHub Code Scanning after running above workflow**
+
+![Code Scanner Sample](images/codescanner.png)
