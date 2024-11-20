@@ -20,4 +20,5 @@ export interface AppknoxInputs {
    * Enable SARIF format
    */
   sarif: SarifOptions;
+  region?: string;  // Optional Region parameter
 }

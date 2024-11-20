@@ -37,11 +37,15 @@ export function getInputs(): AppknoxInputs {
     );
   }
 
+  const region = core.getInput(Inputs.Region) || 'secure.appknox.com';  // Default to the standard Region
+
   const inputs = {
     appknoxAccessToken: accessToken,
     filePath: path,
     riskThreshold: riskThreshold,
-    sarif: sarifString
+    sarif: sarifString,
+    region: region  // Include the region in the inputs
   } as AppknoxInputs;
+
   return inputs;
 }

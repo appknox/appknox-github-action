@@ -3,6 +3,12 @@ export enum Inputs {
   Path = 'file_path',
   RiskThreshold = 'risk_threshold',
   Sarif = 'sarif',
+  Region = 'region'  // New input for Region
+}
+
+export enum SarifOptions {
+  Enable = 'Enable',
+  Disable = 'Disable'
 }
 
 export enum SarifOptions {
