@@ -42,13 +42,34 @@ async function downloadAppknoxCLI(platform: NodeJS.Platform) {
 }
 
 async function getAppknoxToolPath() {
-  const foundPath = tc.find('appknox', binaryVersion);
-  if (foundPath) {
-    return path.join(foundPath, 'appknox');
+  // Update path to point to your specific location
+  const localAppknoxPath = path.join(process.cwd(), '..', 'appknox-go', 'bin', 'appknox');
+  
+  // Ensure the binary exists and is executable
+  if (!fs.existsSync(localAppknoxPath)) {
+    throw new Error(`Local appknox binary not found at ${localAppknoxPath}`);
   }
-  const appknoxPath = await downloadAppknoxCLI(process.platform);
-  await tc.cacheFile(appknoxPath, 'appknox', 'appknox', binaryVersion);
-  return path.join(tc.find('appknox', binaryVersion), 'appknox');
+  
+  // Make sure it's executable
+  fs.chmodSync(localAppknoxPath, '755');
+  
+  return localAppknoxPath;
+
+
+  // if (foundPath) {
+  //   return path.join(foundPath, 'appknox');
+  // }
+  // const appknoxPath = await downloadAppknoxCLI(process.platform);
+  // await tc.cacheFile(appknoxPath, 'appknox', 'appknox', binaryVersion);
+  // return path.join(tc.find('appknox', binaryVersion), 'appknox');
+  // const foundPath = tc.find('appknox', binaryVersion);
+  // if (foundPath) {
+  //   return path.join(foundPath, 'appknox');
+  // }
+  // const appknoxPath = await downloadAppknoxCLI(process.platform);
+  // await tc.cacheFile(appknoxPath, 'appknox', 'appknox', binaryVersion);
+  // return path.join(tc.find('appknox', binaryVersion), 'appknox');
+
 }
 
 interface ExecOutput {
@@ -123,14 +144,17 @@ export async function sarifReport(
 
 export async function cicheck(
   riskThreshold: RiskThresholdOptions,
-  fileID: number
+  fileID: number,
+  timeout: number
 ): Promise<void> {
   const toolPath = await getAppknoxToolPath();
   const args = [
     'cicheck',
     fileID.toString(),
     '--risk-threshold',
-    riskThreshold
+    riskThreshold,
+    '--timeout',
+    timeout.toString()
   ];
   const combinedOutput = await execBinary(toolPath, args);
   if (combinedOutput.code > 0) {

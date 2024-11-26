@@ -20,4 +20,8 @@ export interface AppknoxInputs {
    * Enable SARIF format
    */
   sarif: SarifOptions;
+  /**
+   * Timeout duration in minutes for the scan
+   */
+  timeout: number;
 }
