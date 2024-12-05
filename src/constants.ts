@@ -3,7 +3,7 @@ export enum Inputs {
   Path = 'file_path',
   RiskThreshold = 'risk_threshold',
   Sarif = 'sarif',
-  Timeout = 'timeout'
+  SastTimeout = 'sast_timeout'
 }
 
 export enum SarifOptions {
