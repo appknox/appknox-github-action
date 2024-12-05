@@ -126,7 +126,7 @@ export async function sarifReport(
 export async function cicheck(
   riskThreshold: RiskThresholdOptions,
   fileID: number,
-  timeout: number
+  sastTimeout: number
 ): Promise<void> {
   const toolPath = await getAppknoxToolPath();
   const args = [
@@ -134,8 +134,8 @@ export async function cicheck(
     fileID.toString(),
     '--risk-threshold',
     riskThreshold,
-    '--timeout',
-    timeout.toString()
+    '--sast-timeout',
+    sastTimeout.toString()
   ];
   const combinedOutput = await execBinary(toolPath, args);
   if (combinedOutput.code > 0) {

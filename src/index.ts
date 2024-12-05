@@ -9,11 +9,11 @@ async function run(): Promise<void> {
     await whoami();
     const fileID = await upload(inputs.filePath);
     const sarif = inputs.sarif;
-    const timeout=inputs.timeout;
+    const sastTimeout=inputs.sastTimeout;
     if (sarif == 'Enable'){
       await sarifReport(fileID);
     }
-    await cicheck(inputs.riskThreshold, fileID, timeout);
+    await cicheck(inputs.riskThreshold, fileID, sastTimeout);
   } catch (err: any) {
       core.setFailed(err.message);
   }

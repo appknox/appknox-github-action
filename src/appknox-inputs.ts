@@ -21,7 +21,7 @@ export interface AppknoxInputs {
    */
   sarif: SarifOptions;
   /**
-   * Timeout duration in minutes for the scan
+   * Timeout duration in minutes for the static scan
    */
-  timeout: number;
+  sastTimeout: number;
 }
