@@ -134,7 +134,7 @@ export async function cicheck(
     fileID.toString(),
     '--risk-threshold',
     riskThreshold,
-    '--sast-timeout',
+    '--timeout',
     sastTimeout.toString()
   ];
   const combinedOutput = await execBinary(toolPath, args);
