@@ -15,6 +15,10 @@ inputs:
   sarif:
     description: 'Enable SARIF format report. Defaults to false'
     default: 'Disable'
+  sast_timeout:
+    description: 'Static scan timeout duration in minutes. If not provided defaults to 30 mins'
+    required: false
+    default: 30
 branding:
   icon: 'shield'
   color: 'blue'

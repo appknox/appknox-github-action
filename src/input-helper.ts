@@ -10,6 +10,7 @@ export function getInputs(): AppknoxInputs {
     required: true
   });
   const path = core.getInput(Inputs.Path, {required: true});
+  const sastTimeout= core.getInput(Inputs.SastTimeout, { required: false }) || 30  // Default to 30 minutes if not specified
   const sarifStringInput = core.getInput(Inputs.Sarif) || SarifOptions.Disable;
   const sarifString: SarifOptions = SarifOptions[sarifStringInput];
 
@@ -36,12 +37,13 @@ export function getInputs(): AppknoxInputs {
       )}`
     );
   }
-
   const inputs = {
     appknoxAccessToken: accessToken,
     filePath: path,
     riskThreshold: riskThreshold,
-    sarif: sarifString
+    sarif: sarifString,
+    sastTimeout: sastTimeout
   } as AppknoxInputs;
+
   return inputs;
 }

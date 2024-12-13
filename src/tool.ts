@@ -4,6 +4,8 @@ import * as tc from '@actions/tool-cache';
 import * as exec from '@actions/exec';
 import {binaryVersion, RiskThresholdOptions} from './constants';
 
+
+
 interface AppknoxBinaryConfig {
   name: string;
 }
@@ -40,7 +42,6 @@ async function downloadAppknoxCLI(platform: NodeJS.Platform) {
   fs.chmodSync(appknoxPath, '755');
   return appknoxPath;
 }
-
 async function getAppknoxToolPath() {
   const foundPath = tc.find('appknox', binaryVersion);
   if (foundPath) {
@@ -50,6 +51,7 @@ async function getAppknoxToolPath() {
   await tc.cacheFile(appknoxPath, 'appknox', 'appknox', binaryVersion);
   return path.join(tc.find('appknox', binaryVersion), 'appknox');
 }
+
 
 interface ExecOutput {
   output: string;
@@ -123,14 +125,17 @@ export async function sarifReport(
 
 export async function cicheck(
   riskThreshold: RiskThresholdOptions,
-  fileID: number
+  fileID: number,
+  sastTimeout: number
 ): Promise<void> {
   const toolPath = await getAppknoxToolPath();
   const args = [
     'cicheck',
     fileID.toString(),
     '--risk-threshold',
-    riskThreshold
+    riskThreshold,
+    '--timeout',
+    sastTimeout.toString()
   ];
   const combinedOutput = await execBinary(toolPath, args);
   if (combinedOutput.code > 0) {
