@@ -39,5 +39,5 @@ var RiskThresholdOptions;
      */
     RiskThresholdOptions["CRITICAL"] = "CRITICAL";
 })(RiskThresholdOptions = exports.RiskThresholdOptions || (exports.RiskThresholdOptions = {}));
-exports.binaryVersion = '1.4.1';
+exports.binaryVersion = '1.7.0';
 //# sourceMappingURL=constants.js.map

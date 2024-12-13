@@ -129,14 +129,12 @@ function upload(file_path) {
     });
 }
 exports.upload = upload;
-function sarifReport(fileID, sastTimeout) {
+function sarifReport(fileID) {
     return __awaiter(this, void 0, void 0, function* () {
         const toolPath = yield getAppknoxToolPath();
         const args = [
             'sarif',
             fileID.toString(),
-            '--timeout',
-            sastTimeout.toString(),
         ];
         const combinedOutput = yield execBinary(toolPath, args);
         if (combinedOutput.code > 0) {
@@ -158,7 +156,7 @@ function cicheck(riskThreshold, fileID, sastTimeout) {
             fileID.toString(),
             '--risk-threshold',
             riskThreshold,
-            '--timeout',
+            '--sast-timeout',
             sastTimeout.toString()
         ];
         const combinedOutput = yield execBinary(toolPath, args);
