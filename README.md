@@ -35,7 +35,8 @@ In your Github action workflow file (eg: `.github/workflows/build.yml`), insert 
 | `appknox_access_token`  | Personal access token secret |
 | `file_path`             | File path to the mobile application binary to be uploaded |
 | `risk_threshold`        | Risk threshold value for which the CI should fail. <br><br>Accepted values: `CRITICAL, HIGH, MEDIUM & LOW` <br><br>Default: `LOW` |
-| `sarif`                 | Enables SARIF report generation. <br><br>Accepted values: `Enable & Disable` <br><br>Default: `Disable` |
+| `sarif`                 | Enables SARIF report generation. <br><br>Accepted values: `Enable & Disable` <br><br>Default: `Disable`|
+| `sast_timeout`          | SAST Timeout in Minutes. <br><br>Accepted values: `1 to 240` <br><br>Default: `30` Minutes |
 
 ---
 
