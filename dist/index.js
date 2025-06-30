@@ -29401,6 +29401,7 @@ var Inputs;
     Inputs["Path"] = "file_path";
     Inputs["RiskThreshold"] = "risk_threshold";
     Inputs["Sarif"] = "sarif";
+    Inputs["SastTimeout"] = "sast_timeout";
 })(Inputs = exports.Inputs || (exports.Inputs = {}));
 var SarifOptions;
 (function (SarifOptions) {
@@ -29432,7 +29433,7 @@ var RiskThresholdOptions;
      */
     RiskThresholdOptions["CRITICAL"] = "CRITICAL";
 })(RiskThresholdOptions = exports.RiskThresholdOptions || (exports.RiskThresholdOptions = {}));
-exports.binaryVersion = '1.4.1';
+exports.binaryVersion = '1.7.0';
 
 
 /***/ }),
@@ -29486,10 +29487,11 @@ function run() {
             yield (0, tool_1.whoami)();
             const fileID = yield (0, tool_1.upload)(inputs.filePath);
             const sarif = inputs.sarif;
+            const sastTimeout = inputs.sastTimeout;
             if (sarif == 'Enable') {
                 yield (0, tool_1.sarifReport)(fileID);
             }
-            yield (0, tool_1.cicheck)(inputs.riskThreshold, fileID);
+            yield (0, tool_1.cicheck)(inputs.riskThreshold, fileID, sastTimeout);
         }
         catch (err) {
             core.setFailed(err.message);
@@ -29541,6 +29543,7 @@ function getInputs() {
         required: true
     });
     const path = core.getInput(constants_1.Inputs.Path, { required: true });
+    const sastTimeout = core.getInput(constants_1.Inputs.SastTimeout, { required: false }) || 30; // Default to 30 minutes if not specified
     const sarifStringInput = core.getInput(constants_1.Inputs.Sarif) || constants_1.SarifOptions.Disable;
     const sarifString = constants_1.SarifOptions[sarifStringInput];
     if (!sarifString) {
@@ -29555,7 +29558,8 @@ function getInputs() {
         appknoxAccessToken: accessToken,
         filePath: path,
         riskThreshold: riskThreshold,
-        sarif: sarifString
+        sarif: sarifString,
+        sastTimeout: sastTimeout
     };
     return inputs;
 }
@@ -29718,14 +29722,16 @@ function sarifReport(fileID) {
     });
 }
 exports.sarifReport = sarifReport;
-function cicheck(riskThreshold, fileID) {
+function cicheck(riskThreshold, fileID, sastTimeout) {
     return __awaiter(this, void 0, void 0, function* () {
         const toolPath = yield getAppknoxToolPath();
         const args = [
             'cicheck',
             fileID.toString(),
             '--risk-threshold',
-            riskThreshold
+            riskThreshold,
+            '--timeout',
+            sastTimeout.toString()
         ];
         const combinedOutput = yield execBinary(toolPath, args);
         if (combinedOutput.code > 0) {

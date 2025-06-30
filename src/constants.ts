@@ -3,12 +3,8 @@ export enum Inputs {
   Path = 'file_path',
   RiskThreshold = 'risk_threshold',
   Sarif = 'sarif',
+  SastTimeout = 'sast_timeout',
   Region = 'region'  // New input for Region
-}
-
-export enum SarifOptions {
-  Enable = 'Enable',
-  Disable = 'Disable'
 }
 
 export enum SarifOptions {
@@ -45,4 +41,4 @@ export enum RiskThresholdOptions {
   CRITICAL = 'CRITICAL'
 }
 
-export const binaryVersion = '1.4.1';
+export const binaryVersion = '1.7.0';

@@ -17,7 +17,7 @@ async function run(): Promise<void> {
 
     // Ensure Region is used in the whoami function or any other function that requires it
     await whoami(inputs.region);
-
+    
     // Upload file and get file ID
     const fileID = await upload(inputs.filePath, inputs.region);
 
@@ -25,9 +25,9 @@ async function run(): Promise<void> {
     if (inputs.sarif === 'Enable') {
       await sarifReport(fileID, inputs.region);
     }
-
+    
     // Run CICheck with the specified risk threshold
-    await cicheck(inputs.riskThreshold, fileID, inputs.region);
+    await cicheck(inputs.riskThreshold, fileID, sastTimeout, inputs.region);
 
   } catch (err: any) {
       core.setFailed(err.message);
