@@ -26,16 +26,18 @@ In your Github action workflow file (eg: `.github/workflows/build.yml`), insert 
     appknox_access_token: ${{ secrets.APPKNOX_ACCESS_TOKEN }}
     file_path: app/build/outputs/apk/debug/app-debug.apk
     risk_threshold: HIGH
+    region: Global
 ```
 
 ## Inputs
 
-| Key                     | Value                        |
-|-------------------------|------------------------------|
-| `appknox_access_token`  | Personal access token secret |
-| `file_path`             | File path to the mobile application binary to be uploaded |
-| `risk_threshold`        | Risk threshold value for which the CI should fail. <br><br>Accepted values: `CRITICAL, HIGH, MEDIUM & LOW` <br><br>Default: `LOW` |
-| `sarif`                 | Enables SARIF report generation. <br><br>Accepted values: `Enable & Disable` <br><br>Default: `Disable` |
+| Key                    | Value                                                                                                                            |
+|------------------------|----------------------------------------------------------------------------------------------------------------------------------|
+| `appknox_access_token` | Personal access token secret                                                                                                     |
+| `file_path`            | File path to the mobile application binary to be uploaded                                                                        |
+| `risk_threshold`       | Risk threshold value for which the CI should fail. <br><br>Accepted values: `CRITICAL, HIGH, MEDIUM & LOW` <br><br>Default: `LOW`|
+| `sarif`                | Enables SARIF report generation. <br><br>Accepted values: `Enable & Disable` <br><br>Default: `Disable`                          |
+| `region`               | The Appknox Regions to use. Can be a region like `"Global"`, `"Saudi"`. By default it is `"Global"`                              |
 
 ---
 
@@ -67,6 +69,7 @@ jobs:
         appknox_access_token: ${{ secrets.APPKNOX_ACCESS_TOKEN }}
         file_path: app/build/outputs/apk/debug/app-debug.apk
         risk_threshold: MEDIUM
+        region: Global
 ```
 ### Appknox Scan with Downloadable SARIF File
 _This example demonstrates how to run Appknox Scan to generate a SARIF report and download it as an artifact._
