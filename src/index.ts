@@ -13,7 +13,7 @@ async function run(): Promise<void> {
     if (sarif == 'Enable'){
       await sarifReport(fileID);
     }
-    await cicheck(inputs.riskThreshold, fileID, sastTimeout);
+    await cicheck(inputs.riskThreshold, fileID, sastTimeout, inputs.healthScore);
   } catch (err: any) {
       core.setFailed(err.message);
   }

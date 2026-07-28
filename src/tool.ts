@@ -124,19 +124,23 @@ export async function sarifReport(
 }
 
 export async function cicheck(
-  riskThreshold: RiskThresholdOptions,
+  riskThreshold: RiskThresholdOptions | undefined,
   fileID: number,
-  sastTimeout: number
+  sastTimeout: number,
+  healthScore?: number
 ): Promise<void> {
   const toolPath = await getAppknoxToolPath();
   const args = [
     'cicheck',
     fileID.toString(),
-    '--risk-threshold',
-    riskThreshold,
     '--timeout',
     sastTimeout.toString()
   ];
+  if (riskThreshold !== undefined) {
+    args.push('--risk-threshold', riskThreshold);
+  } else if (healthScore !== undefined) {
+    args.push('--healthscore', healthScore.toString());
+  }
   const combinedOutput = await execBinary(toolPath, args);
   if (combinedOutput.code > 0) {
     const errArr = combinedOutput.err.split('\n').filter(_ => _);
