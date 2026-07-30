@@ -29434,7 +29434,7 @@ var RiskThresholdOptions;
      */
     RiskThresholdOptions["CRITICAL"] = "CRITICAL";
 })(RiskThresholdOptions = exports.RiskThresholdOptions || (exports.RiskThresholdOptions = {}));
-exports.binaryVersion = '1.7.0';
+exports.binaryVersion = '1.8.5';
 
 
 /***/ }),
@@ -29755,7 +29755,7 @@ function cicheck(riskThreshold, fileID, sastTimeout, healthScore) {
             args.push('--risk-threshold', riskThreshold);
         }
         else if (healthScore !== undefined) {
-            args.push('--healthscore', healthScore.toString());
+            args.push('--health-score-threshold', healthScore.toString());
         }
         const combinedOutput = yield execBinary(toolPath, args);
         if (combinedOutput.code > 0) {
