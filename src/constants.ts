@@ -41,4 +41,4 @@ export enum RiskThresholdOptions {
   CRITICAL = 'CRITICAL'
 }
 
-export const binaryVersion = '1.7.0';
+export const binaryVersion = '1.8.5';

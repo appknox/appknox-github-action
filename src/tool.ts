@@ -139,7 +139,7 @@ export async function cicheck(
   if (riskThreshold !== undefined) {
     args.push('--risk-threshold', riskThreshold);
   } else if (healthScore !== undefined) {
-    args.push('--healthscore', healthScore.toString());
+    args.push('--health-score-threshold', healthScore.toString());
   }
   const combinedOutput = await execBinary(toolPath, args);
   if (combinedOutput.code > 0) {
