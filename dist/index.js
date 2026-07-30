@@ -29402,6 +29402,7 @@ var Inputs;
     Inputs["RiskThreshold"] = "risk_threshold";
     Inputs["Sarif"] = "sarif";
     Inputs["SastTimeout"] = "sast_timeout";
+    Inputs["HealthScore"] = "health_score";
 })(Inputs = exports.Inputs || (exports.Inputs = {}));
 var SarifOptions;
 (function (SarifOptions) {
@@ -29491,7 +29492,7 @@ function run() {
             if (sarif == 'Enable') {
                 yield (0, tool_1.sarifReport)(fileID);
             }
-            yield (0, tool_1.cicheck)(inputs.riskThreshold, fileID, sastTimeout);
+            yield (0, tool_1.cicheck)(inputs.riskThreshold, fileID, sastTimeout, inputs.healthScore);
         }
         catch (err) {
             core.setFailed(err.message);
@@ -29549,15 +29550,34 @@ function getInputs() {
     if (!sarifString) {
         core.setFailed(`Unrecognized ${constants_1.Inputs.Sarif} input. Provided: ${sarifString}. Available options: ${Object.keys(constants_1.SarifOptions)}`);
     }
-    const riskThresholdInput = core.getInput(constants_1.Inputs.RiskThreshold) || constants_1.RiskThresholdOptions.LOW;
-    const riskThreshold = constants_1.RiskThresholdOptions[riskThresholdInput];
-    if (!riskThreshold) {
-        core.setFailed(`Unrecognized ${constants_1.Inputs.RiskThreshold} input. Provided: ${riskThreshold}. Available options: ${Object.keys(constants_1.RiskThresholdOptions)}`);
+    const riskThresholdInput = core.getInput(constants_1.Inputs.RiskThreshold);
+    const healthScoreInput = core.getInput(constants_1.Inputs.HealthScore);
+    if (riskThresholdInput && healthScoreInput) {
+        core.setFailed('Only one of risk_threshold or health_score may be provided, not both.');
+    }
+    if (!riskThresholdInput && !healthScoreInput) {
+        core.setFailed('At least one of risk_threshold or health_score must be provided.');
+    }
+    let riskThreshold;
+    let healthScore;
+    if (riskThresholdInput) {
+        riskThreshold = constants_1.RiskThresholdOptions[riskThresholdInput];
+        if (!riskThreshold) {
+            core.setFailed(`Unrecognized ${constants_1.Inputs.RiskThreshold} input. Provided: ${riskThresholdInput}. Available options: ${Object.keys(constants_1.RiskThresholdOptions)}`);
+        }
+    }
+    if (healthScoreInput) {
+        const parsed = Number(healthScoreInput);
+        if (isNaN(parsed) || parsed < 0 || parsed > 100) {
+            core.setFailed(`Invalid ${constants_1.Inputs.HealthScore} input. Provided: ${healthScoreInput}. Must be a number between 0 and 100.`);
+        }
+        healthScore = parsed;
     }
     const inputs = {
         appknoxAccessToken: accessToken,
         filePath: path,
         riskThreshold: riskThreshold,
+        healthScore: healthScore,
         sarif: sarifString,
         sastTimeout: sastTimeout
     };
@@ -29722,17 +29742,21 @@ function sarifReport(fileID) {
     });
 }
 exports.sarifReport = sarifReport;
-function cicheck(riskThreshold, fileID, sastTimeout) {
+function cicheck(riskThreshold, fileID, sastTimeout, healthScore) {
     return __awaiter(this, void 0, void 0, function* () {
         const toolPath = yield getAppknoxToolPath();
         const args = [
             'cicheck',
             fileID.toString(),
-            '--risk-threshold',
-            riskThreshold,
             '--timeout',
             sastTimeout.toString()
         ];
+        if (riskThreshold !== undefined) {
+            args.push('--risk-threshold', riskThreshold);
+        }
+        else if (healthScore !== undefined) {
+            args.push('--healthscore', healthScore.toString());
+        }
         const combinedOutput = yield execBinary(toolPath, args);
         if (combinedOutput.code > 0) {
             const errArr = combinedOutput.err.split('\n').filter(_ => _);
