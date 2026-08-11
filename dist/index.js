@@ -29555,11 +29555,13 @@ function getInputs() {
     if (riskThresholdInput && healthScoreInput) {
         throw new Error('Only one of risk_threshold or health_score may be provided, not both.');
     }
-    if (!riskThresholdInput && !healthScoreInput) {
-        throw new Error('At least one of risk_threshold or health_score must be provided.');
-    }
     let riskThreshold;
     let healthScore;
+    if (!riskThresholdInput && !healthScoreInput) {
+        core.warning('Neither risk_threshold nor health_score was provided. Defaulting to risk_threshold: LOW. ' +
+            'Please explicitly set one of these inputs in your workflow.');
+        riskThreshold = constants_1.RiskThresholdOptions.LOW;
+    }
     if (riskThresholdInput) {
         riskThreshold = constants_1.RiskThresholdOptions[riskThresholdInput];
         if (!riskThreshold) {

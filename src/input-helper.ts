@@ -33,14 +33,16 @@ export function getInputs(): AppknoxInputs {
     );
   }
 
-  if (!riskThresholdInput && !healthScoreInput) {
-    throw new Error(
-      'At least one of risk_threshold or health_score must be provided.'
-    );
-  }
-
   let riskThreshold: RiskThresholdOptions | undefined;
   let healthScore: number | undefined;
+
+  if (!riskThresholdInput && !healthScoreInput) {
+    core.warning(
+      'Neither risk_threshold nor health_score was provided. Defaulting to risk_threshold: LOW. ' +
+      'Please explicitly set one of these inputs in your workflow.'
+    );
+    riskThreshold = RiskThresholdOptions.LOW;
+  }
 
   if (riskThresholdInput) {
     riskThreshold = RiskThresholdOptions[riskThresholdInput];
