@@ -15,10 +15,10 @@ export function getInputs(): AppknoxInputs {
   const sarifString: SarifOptions = SarifOptions[sarifStringInput];
 
   if (!sarifString) {
-    core.setFailed(
+    throw new Error(
       `Unrecognized ${
         Inputs.Sarif
-      } input. Provided: ${sarifString}. Available options: ${Object.keys(
+      } input. Provided: ${sarifStringInput}. Available options: ${Object.keys(
         SarifOptions
       )}`
     );
@@ -28,13 +28,13 @@ export function getInputs(): AppknoxInputs {
   const healthScoreInput = core.getInput(Inputs.HealthScore);
 
   if (riskThresholdInput && healthScoreInput) {
-    core.setFailed(
+    throw new Error(
       'Only one of risk_threshold or health_score may be provided, not both.'
     );
   }
 
   if (!riskThresholdInput && !healthScoreInput) {
-    core.setFailed(
+    throw new Error(
       'At least one of risk_threshold or health_score must be provided.'
     );
   }
@@ -45,7 +45,7 @@ export function getInputs(): AppknoxInputs {
   if (riskThresholdInput) {
     riskThreshold = RiskThresholdOptions[riskThresholdInput];
     if (!riskThreshold) {
-      core.setFailed(
+      throw new Error(
         `Unrecognized ${
           Inputs.RiskThreshold
         } input. Provided: ${riskThresholdInput}. Available options: ${Object.keys(
@@ -57,8 +57,8 @@ export function getInputs(): AppknoxInputs {
 
   if (healthScoreInput) {
     const parsed = Number(healthScoreInput);
-    if (isNaN(parsed) || parsed < 0 || parsed > 100) {
-      core.setFailed(
+    if (Number.isNaN(parsed) || parsed < 0 || parsed > 100) {
+      throw new Error(
         `Invalid ${Inputs.HealthScore} input. Provided: ${healthScoreInput}. Must be a number between 0 and 100.`
       );
     }

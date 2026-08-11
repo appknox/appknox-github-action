@@ -1,5 +1,5 @@
-import path from 'path';
-import fs from 'fs';
+import path from 'node:path';
+import fs from 'node:fs';
 import * as tc from '@actions/tool-cache';
 import * as exec from '@actions/exec';
 import {binaryVersion, RiskThresholdOptions} from './constants';
@@ -30,7 +30,7 @@ const supportedOS: OSAppknoxBinaryMap = {
  */
 function getAppknoxDownloadURL(os: string): string {
   if (!(os in supportedOS)) {
-    throw Error(`Unsupported os ${os}`);
+    throw new Error(`Unsupported os ${os}`);
   }
   const binaryName = supportedOS[os].name;
   return `https://github.com/appknox/appknox-go/releases/download/${binaryVersion}/${binaryName}`;
@@ -98,7 +98,7 @@ export async function upload(file_path: string): Promise<number> {
   const toolPath = await getAppknoxToolPath();
   const combinedOutput = await execBinary(toolPath, ['upload', file_path]);
   if (combinedOutput.code > 0) {
-    const errArr = combinedOutput.err.split('\n').filter(_ => _);
+    const errArr = combinedOutput.err.split('\n').filter(Boolean);
     throw new Error(errArr[errArr.length - 1]);
   }
   return Number.parseInt(combinedOutput.output);
@@ -114,8 +114,8 @@ export async function sarifReport(
   ];
   const combinedOutput = await execBinary(toolPath, args);
   if (combinedOutput.code > 0) {
-    const errArr = combinedOutput.err.split('\n').filter(_ => _);
-    const outArr = combinedOutput.output.split('\n').filter(_ => _);
+    const errArr = combinedOutput.err.split('\n').filter(Boolean);
+    const outArr = combinedOutput.output.split('\n').filter(Boolean);
     const errMes = errArr[errArr.length - 1];
     const outMes = outArr[outArr.length - 1];
     throw new Error(errMes + '. ' + outMes);
@@ -143,8 +143,8 @@ export async function cicheck(
   }
   const combinedOutput = await execBinary(toolPath, args);
   if (combinedOutput.code > 0) {
-    const errArr = combinedOutput.err.split('\n').filter(_ => _);
-    const outArr = combinedOutput.output.split('\n').filter(_ => _);
+    const errArr = combinedOutput.err.split('\n').filter(Boolean);
+    const outArr = combinedOutput.output.split('\n').filter(Boolean);
     const errMes = errArr[errArr.length - 1];
     const outMes = outArr[outArr.length - 1];
     throw new Error(errMes + '. ' + outMes);
