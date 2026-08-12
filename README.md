@@ -1,6 +1,6 @@
 # Appknox Github Action
 
-The Appknox Github action allows you to perform Appknox security scan on your mobile application binary. The APK/IPA built from your CI pipeline will be uploaded to Appknox platform which performs static scan and the build will be errored according to the chosen risk threshold.
+The Appknox Github action allows you to perform Appknox security scan on your mobile application binary. The APK/IPA built from your CI pipeline will be uploaded to Appknox platform which performs static scan and the build will be errored according to the chosen risk threshold or health score.
 
 ## How to use it?
 
@@ -34,14 +34,16 @@ In your Github action workflow file (eg: `.github/workflows/build.yml`), insert 
 |-------------------------|------------------------------|
 | `appknox_access_token`  | Personal access token secret |
 | `file_path`             | File path to the mobile application binary to be uploaded |
-| `risk_threshold`        | Risk threshold value for which the CI should fail. <br><br>Accepted values: `CRITICAL, HIGH, MEDIUM & LOW` <br><br>Default: `LOW` |
+| `risk_threshold`        | Minimum risk level to fail CI. Mutually exclusive with `health_score` — exactly one must be provided. <br><br>Accepted values: `CRITICAL, HIGH, MEDIUM & LOW` |
+| `health_score`          | Minimum health score (0–100) required to pass CI. Mutually exclusive with `risk_threshold` — exactly one must be provided. <br><br>Accepted values: `0` to `100` |
 | `sarif`                 | Enables SARIF report generation. <br><br>Accepted values: `Enable & Disable` <br><br>Default: `Disable` |
+| `sast_timeout`          | Static scan timeout duration in minutes. <br><br>Default: `30` |
 
 ---
 
 ## Examples:
 
-### Running Appknox Scan for Vulnerability Detection
+### Running Appknox Scan for Vulnerability Detection (using risk_threshold)
 ```yml
 name: Build
 on:
@@ -67,6 +69,34 @@ jobs:
         appknox_access_token: ${{ secrets.APPKNOX_ACCESS_TOKEN }}
         file_path: app/build/outputs/apk/debug/app-debug.apk
         risk_threshold: MEDIUM
+```
+### Running Appknox Scan with Health Score
+_This example uses `health_score` to fail CI when the app's security score drops below the specified threshold._
+```yml
+name: Build
+on:
+  push:
+    branches:
+      - master
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up JDK 1.8
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+    - name: Build the app
+      run: ./gradlew build
+    - name: Appknox GitHub action
+      uses: appknox/appknox-github-action@1.1.2
+      with:
+        appknox_access_token: ${{ secrets.APPKNOX_ACCESS_TOKEN }}
+        file_path: app/build/outputs/apk/debug/app-debug.apk
+        health_score: 70
 ```
 ### Appknox Scan with Downloadable SARIF File
 _This example demonstrates how to run Appknox Scan to generate a SARIF report and download it as an artifact._

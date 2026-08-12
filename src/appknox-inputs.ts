@@ -14,7 +14,12 @@ export interface AppknoxInputs {
   /**
    * Minimum risk to fail CI
    */
-  riskThreshold: RiskThresholdOptions;
+  riskThreshold?: RiskThresholdOptions;
+
+  /**
+   * Health score threshold (0-100). Mutually exclusive with riskThreshold.
+   */
+  healthScore?: number;
 
   /**
    * Enable SARIF format

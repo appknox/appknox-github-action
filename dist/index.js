@@ -29402,6 +29402,7 @@ var Inputs;
     Inputs["RiskThreshold"] = "risk_threshold";
     Inputs["Sarif"] = "sarif";
     Inputs["SastTimeout"] = "sast_timeout";
+    Inputs["HealthScore"] = "health_score";
 })(Inputs = exports.Inputs || (exports.Inputs = {}));
 var SarifOptions;
 (function (SarifOptions) {
@@ -29433,7 +29434,7 @@ var RiskThresholdOptions;
      */
     RiskThresholdOptions["CRITICAL"] = "CRITICAL";
 })(RiskThresholdOptions = exports.RiskThresholdOptions || (exports.RiskThresholdOptions = {}));
-exports.binaryVersion = '1.7.0';
+exports.binaryVersion = '1.8.5';
 
 
 /***/ }),
@@ -29491,7 +29492,7 @@ function run() {
             if (sarif == 'Enable') {
                 yield (0, tool_1.sarifReport)(fileID);
             }
-            yield (0, tool_1.cicheck)(inputs.riskThreshold, fileID, sastTimeout);
+            yield (0, tool_1.cicheck)(inputs.riskThreshold, fileID, sastTimeout, inputs.healthScore);
         }
         catch (err) {
             core.setFailed(err.message);
@@ -29547,17 +29548,38 @@ function getInputs() {
     const sarifStringInput = core.getInput(constants_1.Inputs.Sarif) || constants_1.SarifOptions.Disable;
     const sarifString = constants_1.SarifOptions[sarifStringInput];
     if (!sarifString) {
-        core.setFailed(`Unrecognized ${constants_1.Inputs.Sarif} input. Provided: ${sarifString}. Available options: ${Object.keys(constants_1.SarifOptions)}`);
+        throw new Error(`Unrecognized ${constants_1.Inputs.Sarif} input. Provided: ${sarifStringInput}. Available options: ${Object.keys(constants_1.SarifOptions)}`);
     }
-    const riskThresholdInput = core.getInput(constants_1.Inputs.RiskThreshold) || constants_1.RiskThresholdOptions.LOW;
-    const riskThreshold = constants_1.RiskThresholdOptions[riskThresholdInput];
-    if (!riskThreshold) {
-        core.setFailed(`Unrecognized ${constants_1.Inputs.RiskThreshold} input. Provided: ${riskThreshold}. Available options: ${Object.keys(constants_1.RiskThresholdOptions)}`);
+    const riskThresholdInput = core.getInput(constants_1.Inputs.RiskThreshold);
+    const healthScoreInput = core.getInput(constants_1.Inputs.HealthScore);
+    if (riskThresholdInput && healthScoreInput) {
+        throw new Error('Only one of risk_threshold or health_score may be provided, not both.');
+    }
+    let riskThreshold;
+    let healthScore;
+    if (!riskThresholdInput && !healthScoreInput) {
+        core.warning('Neither risk_threshold nor health_score was provided. Defaulting to risk_threshold: LOW. ' +
+            'Please explicitly set one of these inputs in your workflow.');
+        riskThreshold = constants_1.RiskThresholdOptions.LOW;
+    }
+    if (riskThresholdInput) {
+        riskThreshold = constants_1.RiskThresholdOptions[riskThresholdInput];
+        if (!riskThreshold) {
+            throw new Error(`Unrecognized ${constants_1.Inputs.RiskThreshold} input. Provided: ${riskThresholdInput}. Available options: ${Object.keys(constants_1.RiskThresholdOptions)}`);
+        }
+    }
+    if (healthScoreInput) {
+        const parsed = Number(healthScoreInput);
+        if (Number.isNaN(parsed) || parsed < 0 || parsed > 100) {
+            throw new Error(`Invalid ${constants_1.Inputs.HealthScore} input. Provided: ${healthScoreInput}. Must be a number between 0 and 100.`);
+        }
+        healthScore = parsed;
     }
     const inputs = {
         appknoxAccessToken: accessToken,
         filePath: path,
         riskThreshold: riskThreshold,
+        healthScore: healthScore,
         sarif: sarifString,
         sastTimeout: sastTimeout
     };
@@ -29610,8 +29632,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.cicheck = exports.sarifReport = exports.upload = exports.whoami = void 0;
-const path_1 = __importDefault(__nccwpck_require__(1017));
-const fs_1 = __importDefault(__nccwpck_require__(7147));
+const node_path_1 = __importDefault(__nccwpck_require__(9411));
+const node_fs_1 = __importDefault(__nccwpck_require__(7561));
 const tc = __importStar(__nccwpck_require__(7784));
 const exec = __importStar(__nccwpck_require__(1514));
 const constants_1 = __nccwpck_require__(9042);
@@ -29633,7 +29655,7 @@ const supportedOS = {
  */
 function getAppknoxDownloadURL(os) {
     if (!(os in supportedOS)) {
-        throw Error(`Unsupported os ${os}`);
+        throw new Error(`Unsupported os ${os}`);
     }
     const binaryName = supportedOS[os].name;
     return `https://github.com/appknox/appknox-go/releases/download/${constants_1.binaryVersion}/${binaryName}`;
@@ -29642,7 +29664,7 @@ function downloadAppknoxCLI(platform) {
     return __awaiter(this, void 0, void 0, function* () {
         const url = getAppknoxDownloadURL(platform);
         const appknoxPath = yield tc.downloadTool(url);
-        fs_1.default.chmodSync(appknoxPath, '755');
+        node_fs_1.default.chmodSync(appknoxPath, '755');
         return appknoxPath;
     });
 }
@@ -29650,11 +29672,11 @@ function getAppknoxToolPath() {
     return __awaiter(this, void 0, void 0, function* () {
         const foundPath = tc.find('appknox', constants_1.binaryVersion);
         if (foundPath) {
-            return path_1.default.join(foundPath, 'appknox');
+            return node_path_1.default.join(foundPath, 'appknox');
         }
         const appknoxPath = yield downloadAppknoxCLI(process.platform);
         yield tc.cacheFile(appknoxPath, 'appknox', 'appknox', constants_1.binaryVersion);
-        return path_1.default.join(tc.find('appknox', constants_1.binaryVersion), 'appknox');
+        return node_path_1.default.join(tc.find('appknox', constants_1.binaryVersion), 'appknox');
     });
 }
 function execBinary(path, args) {
@@ -29696,7 +29718,7 @@ function upload(file_path) {
         const toolPath = yield getAppknoxToolPath();
         const combinedOutput = yield execBinary(toolPath, ['upload', file_path]);
         if (combinedOutput.code > 0) {
-            const errArr = combinedOutput.err.split('\n').filter(_ => _);
+            const errArr = combinedOutput.err.split('\n').filter(Boolean);
             throw new Error(errArr[errArr.length - 1]);
         }
         return Number.parseInt(combinedOutput.output);
@@ -29712,8 +29734,8 @@ function sarifReport(fileID) {
         ];
         const combinedOutput = yield execBinary(toolPath, args);
         if (combinedOutput.code > 0) {
-            const errArr = combinedOutput.err.split('\n').filter(_ => _);
-            const outArr = combinedOutput.output.split('\n').filter(_ => _);
+            const errArr = combinedOutput.err.split('\n').filter(Boolean);
+            const outArr = combinedOutput.output.split('\n').filter(Boolean);
             const errMes = errArr[errArr.length - 1];
             const outMes = outArr[outArr.length - 1];
             throw new Error(errMes + '. ' + outMes);
@@ -29722,21 +29744,25 @@ function sarifReport(fileID) {
     });
 }
 exports.sarifReport = sarifReport;
-function cicheck(riskThreshold, fileID, sastTimeout) {
+function cicheck(riskThreshold, fileID, sastTimeout, healthScore) {
     return __awaiter(this, void 0, void 0, function* () {
         const toolPath = yield getAppknoxToolPath();
         const args = [
             'cicheck',
             fileID.toString(),
-            '--risk-threshold',
-            riskThreshold,
             '--timeout',
             sastTimeout.toString()
         ];
+        if (riskThreshold !== undefined) {
+            args.push('--risk-threshold', riskThreshold);
+        }
+        else if (healthScore !== undefined) {
+            args.push('--health-score-threshold', healthScore.toString());
+        }
         const combinedOutput = yield execBinary(toolPath, args);
         if (combinedOutput.code > 0) {
-            const errArr = combinedOutput.err.split('\n').filter(_ => _);
-            const outArr = combinedOutput.output.split('\n').filter(_ => _);
+            const errArr = combinedOutput.err.split('\n').filter(Boolean);
+            const outArr = combinedOutput.output.split('\n').filter(Boolean);
             const errMes = errArr[errArr.length - 1];
             const outMes = outArr[outArr.length - 1];
             throw new Error(errMes + '. ' + outMes);
@@ -29857,6 +29883,22 @@ module.exports = require("net");
 
 "use strict";
 module.exports = require("node:events");
+
+/***/ }),
+
+/***/ 7561:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:fs");
+
+/***/ }),
+
+/***/ 9411:
+/***/ ((module) => {
+
+"use strict";
+module.exports = require("node:path");
 
 /***/ }),
 

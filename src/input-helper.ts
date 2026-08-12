@@ -15,32 +15,63 @@ export function getInputs(): AppknoxInputs {
   const sarifString: SarifOptions = SarifOptions[sarifStringInput];
 
   if (!sarifString) {
-    core.setFailed(
+    throw new Error(
       `Unrecognized ${
         Inputs.Sarif
-      } input. Provided: ${sarifString}. Available options: ${Object.keys(
+      } input. Provided: ${sarifStringInput}. Available options: ${Object.keys(
         SarifOptions
       )}`
     );
   }
 
-  const riskThresholdInput = core.getInput(Inputs.RiskThreshold) || RiskThresholdOptions.LOW;
-  const riskThreshold: RiskThresholdOptions =
-    RiskThresholdOptions[riskThresholdInput];
+  const riskThresholdInput = core.getInput(Inputs.RiskThreshold);
+  const healthScoreInput = core.getInput(Inputs.HealthScore);
 
-  if (!riskThreshold) {
-    core.setFailed(
-      `Unrecognized ${
-        Inputs.RiskThreshold
-      } input. Provided: ${riskThreshold}. Available options: ${Object.keys(
-        RiskThresholdOptions
-      )}`
+  if (riskThresholdInput && healthScoreInput) {
+    throw new Error(
+      'Only one of risk_threshold or health_score may be provided, not both.'
     );
   }
+
+  let riskThreshold: RiskThresholdOptions | undefined;
+  let healthScore: number | undefined;
+
+  if (!riskThresholdInput && !healthScoreInput) {
+    core.warning(
+      'Neither risk_threshold nor health_score was provided. Defaulting to risk_threshold: LOW. ' +
+      'Please explicitly set one of these inputs in your workflow.'
+    );
+    riskThreshold = RiskThresholdOptions.LOW;
+  }
+
+  if (riskThresholdInput) {
+    riskThreshold = RiskThresholdOptions[riskThresholdInput];
+    if (!riskThreshold) {
+      throw new Error(
+        `Unrecognized ${
+          Inputs.RiskThreshold
+        } input. Provided: ${riskThresholdInput}. Available options: ${Object.keys(
+          RiskThresholdOptions
+        )}`
+      );
+    }
+  }
+
+  if (healthScoreInput) {
+    const parsed = Number(healthScoreInput);
+    if (Number.isNaN(parsed) || parsed < 0 || parsed > 100) {
+      throw new Error(
+        `Invalid ${Inputs.HealthScore} input. Provided: ${healthScoreInput}. Must be a number between 0 and 100.`
+      );
+    }
+    healthScore = parsed;
+  }
+
   const inputs = {
     appknoxAccessToken: accessToken,
     filePath: path,
     riskThreshold: riskThreshold,
+    healthScore: healthScore,
     sarif: sarifString,
     sastTimeout: sastTimeout
   } as AppknoxInputs;

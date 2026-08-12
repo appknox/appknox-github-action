@@ -9,9 +9,8 @@ inputs:
     description: 'Path to the mobile application binary (apk/ipa)'
     required: true
   risk_threshold:
-    description: 'Minimum risk. Valid options are LOW, MEDIUM, HIGH, CRITICAL. Defaults to "LOW"'
-    required: true
-    default: 'LOW'
+    description: 'Minimum risk to fail CI. Valid options are LOW, MEDIUM, HIGH, CRITICAL. Mutually exclusive with health_score. Exactly one must be provided.'
+    required: false
   sarif:
     description: 'Enable SARIF format report. Defaults to false'
     default: 'Disable'
@@ -19,6 +18,9 @@ inputs:
     description: 'Static scan timeout duration in minutes. If not provided defaults to 30 mins'
     required: false
     default: 30
+  health_score:
+    description: 'Minimum health score (0-100) to pass CI. Mutually exclusive with risk_threshold. Exactly one must be provided.'
+    required: false
 branding:
   icon: 'shield'
   color: 'blue'
