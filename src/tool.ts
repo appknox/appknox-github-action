@@ -1,10 +1,8 @@
-import path from 'node:path';
-import fs from 'node:fs';
+import path from 'path';
+import fs from 'fs';
 import * as tc from '@actions/tool-cache';
 import * as exec from '@actions/exec';
 import {binaryVersion, RiskThresholdOptions} from './constants';
-
-
 
 interface AppknoxBinaryConfig {
   name: string;
@@ -52,8 +50,7 @@ async function getAppknoxToolPath() {
   return path.join(tc.find('appknox', binaryVersion), 'appknox');
 }
 
-
-interface ExecOutput {
+export interface ExecOutput {
   output: string;
   err: string;
   code: number;
@@ -94,24 +91,34 @@ export async function whoami(): Promise<void> {
   }
 }
 
-export async function upload(file_path: string): Promise<number> {
+export async function upload(
+  file_path: string,
+  triggerKnoxiq = false
+): Promise<number> {
   const toolPath = await getAppknoxToolPath();
-  const combinedOutput = await execBinary(toolPath, ['upload', file_path]);
+  const args = ['upload', file_path];
+  if (triggerKnoxiq) {
+    args.push('--knoxiq');
+  }
+  const combinedOutput = await execBinary(toolPath, args);
   if (combinedOutput.code > 0) {
     const errArr = combinedOutput.err.split('\n').filter(Boolean);
     throw new Error(errArr[errArr.length - 1]);
   }
-  return Number.parseInt(combinedOutput.output);
+  const fileIDOutput = combinedOutput.output.trim();
+  if (!/^\d+$/.test(fileIDOutput)) {
+    throw new Error(
+      `Upload did not return a valid numeric file ID. Output: ${
+        fileIDOutput || '<empty>'
+      }`
+    );
+  }
+  return Number.parseInt(fileIDOutput, 10);
 }
 
-export async function sarifReport(
-  fileID: number
-): Promise<ExecOutput> {
+export async function sarifReport(fileID: number): Promise<ExecOutput> {
   const toolPath = await getAppknoxToolPath();
-  const args = [
-    'sarif',
-    fileID.toString(),
-  ];
+  const args = ['sarif', fileID.toString()];
   const combinedOutput = await execBinary(toolPath, args);
   if (combinedOutput.code > 0) {
     const errArr = combinedOutput.err.split('\n').filter(Boolean);
@@ -121,6 +128,58 @@ export async function sarifReport(
     throw new Error(errMes + '. ' + outMes);
   }
   return combinedOutput;
+}
+
+export interface PdfReportPaths {
+  pdfPath: string;
+  passwordPath: string;
+}
+
+/**
+ * Creates and downloads the password-protected PDF report for a file.
+ */
+export async function pdfReport(fileID: number): Promise<PdfReportPaths> {
+  const toolPath = await getAppknoxToolPath();
+  const createResult = await execBinary(toolPath, [
+    'reports',
+    'create',
+    fileID.toString()
+  ]);
+  const reportID = createResult.output.trim();
+
+  if (createResult.code > 0) {
+    const errArr = createResult.err.split('\n').filter(Boolean);
+    throw new Error(errArr[errArr.length - 1] || 'Report creation failed');
+  }
+  if (!/^\d+$/.test(reportID)) {
+    throw new Error('Report creation did not return a valid numeric report ID');
+  }
+
+  const downloadResult = await execBinary(toolPath, [
+    'reports',
+    'download',
+    'pdf',
+    reportID
+  ]);
+  if (downloadResult.code > 0) {
+    const errArr = downloadResult.err.split('\n').filter(Boolean);
+    throw new Error(errArr[errArr.length - 1] || 'PDF report download failed');
+  }
+
+  const reportDirectory = path.resolve('reports', fileID.toString());
+  const pdfPath = path.join(reportDirectory, `report_${fileID}.pdf`);
+  const passwordPath = path.join(
+    reportDirectory,
+    `report_${fileID}_password.txt`
+  );
+
+  if (!fs.existsSync(pdfPath) || !fs.existsSync(passwordPath)) {
+    throw new Error(
+      `PDF report download completed but expected files were not found in ${reportDirectory}`
+    );
+  }
+
+  return {pdfPath, passwordPath};
 }
 
 export async function cicheck(
