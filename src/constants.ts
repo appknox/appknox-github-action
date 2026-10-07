@@ -4,7 +4,14 @@ export enum Inputs {
   RiskThreshold = 'risk_threshold',
   Sarif = 'sarif',
   SastTimeout = 'sast_timeout',
-  HealthScore = 'health_score'
+  HealthScore = 'health_score',
+  TriggerKnoxiq = 'trigger_knoxiq',
+  GeneratePdfReport = 'generate_pdf_report'
+}
+
+export enum Outputs {
+  PdfReportPath = 'pdf_report_path',
+  PdfReportPasswordPath = 'pdf_report_password_path'
 }
 
 export enum SarifOptions {
@@ -41,4 +48,4 @@ export enum RiskThresholdOptions {
   CRITICAL = 'CRITICAL'
 }
 
-export const binaryVersion = '1.8.5';
+export const binaryVersion = '1.8.8';

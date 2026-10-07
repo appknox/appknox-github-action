@@ -38,6 +38,15 @@ In your Github action workflow file (eg: `.github/workflows/build.yml`), insert 
 | `health_score`          | Minimum health score (0–100) required to pass CI. Mutually exclusive with `risk_threshold` — exactly one must be provided. <br><br>Accepted values: `0` to `100` |
 | `sarif`                 | Enables SARIF report generation. <br><br>Accepted values: `Enable & Disable` <br><br>Default: `Disable` |
 | `sast_timeout`          | Static scan timeout duration in minutes. <br><br>Default: `30` |
+| `trigger_knoxiq`        | Requests KnoxIQ triage for the uploaded build. KnoxIQ results are reflected by the CI check. <br><br>Accepted values: `true`, `false` <br><br>Default: `false` |
+| `generate_pdf_report`   | Downloads a password-protected PDF report and its password file after the CI check. Report failures are warnings and do not replace the CI check result. <br><br>Accepted values: `true`, `false` <br><br>Default: `false` |
+
+## Outputs
+
+| Key                              | Value |
+|----------------------------------|-------|
+| `pdf_report_path`                | Absolute path to the downloaded PDF report when report generation succeeds |
+| `pdf_report_password_path`       | Absolute path to the downloaded report password file when report generation succeeds |
 
 ---
 
@@ -133,6 +142,34 @@ _This example demonstrates how to run Appknox Scan to generate a SARIF report an
             name: sarif-report
             path: report.sarif
 ```
+### Appknox Scan with KnoxIQ and a Downloadable PDF Report
+
+The action downloads the PDF and password file to `reports/<file-id>/`. Use the
+output paths with `actions/upload-artifact` to retain them after the job. The
+`always()` condition allows a successfully generated report to be uploaded even
+when the Appknox vulnerability gate fails the scan step.
+
+```yml
+    - name: Appknox Scan
+      id: appknox-scan
+      uses: appknox/appknox-github-action@1.2.1
+      with:
+        appknox_access_token: ${{ secrets.APPKNOX_ACCESS_TOKEN }}
+        file_path: app/build/outputs/apk/debug/app-debug.apk
+        risk_threshold: HIGH
+        trigger_knoxiq: true
+        generate_pdf_report: true
+
+    - name: Upload Appknox PDF report
+      if: always() && steps.appknox-scan.outputs.pdf_report_path != ''
+      uses: actions/upload-artifact@v4
+      with:
+        name: appknox-reports
+        path: |
+          ${{ steps.appknox-scan.outputs.pdf_report_path }}
+          ${{ steps.appknox-scan.outputs.pdf_report_password_path }}
+```
+
 ### Upload Appknox Scan Report to GitHub Code Scanning
 **Note:** _For integrating with GitHub Advanced Security (GHAS), ensure you have an active GitHub account with the Advanced Security feature enabled._
 

@@ -21,6 +21,19 @@ inputs:
   health_score:
     description: 'Minimum health score (0-100) to pass CI. Mutually exclusive with risk_threshold. Exactly one must be provided.'
     required: false
+  trigger_knoxiq:
+    description: 'Request KnoxIQ triage during upload. Defaults to false'
+    required: false
+    default: 'false'
+  generate_pdf_report:
+    description: 'Download the password-protected PDF report after the CI check. Defaults to false'
+    required: false
+    default: 'false'
+outputs:
+  pdf_report_path:
+    description: 'Absolute path to the downloaded PDF report when generation succeeds'
+  pdf_report_password_path:
+    description: 'Absolute path to the downloaded PDF report password file when generation succeeds'
 branding:
   icon: 'shield'
   color: 'blue'

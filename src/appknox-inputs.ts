@@ -29,4 +29,14 @@ export interface AppknoxInputs {
    * Timeout duration in minutes for the static scan
    */
   sastTimeout: number;
+
+  /**
+   * Request KnoxIQ triage during upload
+   */
+  triggerKnoxiq: boolean;
+
+  /**
+   * Download the password-protected PDF report after the CI check
+   */
+  generatePdfReport: boolean;
 }

@@ -29394,7 +29394,7 @@ module.exports = v4;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.binaryVersion = exports.RiskThresholdOptions = exports.SarifOptions = exports.Inputs = void 0;
+exports.binaryVersion = exports.RiskThresholdOptions = exports.SarifOptions = exports.Outputs = exports.Inputs = void 0;
 var Inputs;
 (function (Inputs) {
     Inputs["AppknoxAccessToken"] = "appknox_access_token";
@@ -29403,7 +29403,14 @@ var Inputs;
     Inputs["Sarif"] = "sarif";
     Inputs["SastTimeout"] = "sast_timeout";
     Inputs["HealthScore"] = "health_score";
+    Inputs["TriggerKnoxiq"] = "trigger_knoxiq";
+    Inputs["GeneratePdfReport"] = "generate_pdf_report";
 })(Inputs = exports.Inputs || (exports.Inputs = {}));
+var Outputs;
+(function (Outputs) {
+    Outputs["PdfReportPath"] = "pdf_report_path";
+    Outputs["PdfReportPasswordPath"] = "pdf_report_password_path";
+})(Outputs = exports.Outputs || (exports.Outputs = {}));
 var SarifOptions;
 (function (SarifOptions) {
     /**
@@ -29434,72 +29441,7 @@ var RiskThresholdOptions;
      */
     RiskThresholdOptions["CRITICAL"] = "CRITICAL";
 })(RiskThresholdOptions = exports.RiskThresholdOptions || (exports.RiskThresholdOptions = {}));
-exports.binaryVersion = '1.8.5';
-
-
-/***/ }),
-
-/***/ 6144:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const core = __importStar(__nccwpck_require__(2186));
-const tool_1 = __nccwpck_require__(302);
-const input_helper_1 = __nccwpck_require__(6455);
-function run() {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const inputs = (0, input_helper_1.getInputs)();
-            core.exportVariable('APPKNOX_ACCESS_TOKEN', inputs.appknoxAccessToken);
-            yield (0, tool_1.whoami)();
-            const fileID = yield (0, tool_1.upload)(inputs.filePath);
-            const sarif = inputs.sarif;
-            const sastTimeout = inputs.sastTimeout;
-            if (sarif == 'Enable') {
-                yield (0, tool_1.sarifReport)(fileID);
-            }
-            yield (0, tool_1.cicheck)(inputs.riskThreshold, fileID, sastTimeout, inputs.healthScore);
-        }
-        catch (err) {
-            core.setFailed(err.message);
-        }
-    });
-}
-run();
+exports.binaryVersion = '1.8.8';
 
 
 /***/ }),
@@ -29547,6 +29489,8 @@ function getInputs() {
     const sastTimeout = core.getInput(constants_1.Inputs.SastTimeout, { required: false }) || 30; // Default to 30 minutes if not specified
     const sarifStringInput = core.getInput(constants_1.Inputs.Sarif) || constants_1.SarifOptions.Disable;
     const sarifString = constants_1.SarifOptions[sarifStringInput];
+    const triggerKnoxiq = core.getBooleanInput(constants_1.Inputs.TriggerKnoxiq);
+    const generatePdfReport = core.getBooleanInput(constants_1.Inputs.GeneratePdfReport);
     if (!sarifString) {
         throw new Error(`Unrecognized ${constants_1.Inputs.Sarif} input. Provided: ${sarifStringInput}. Available options: ${Object.keys(constants_1.SarifOptions)}`);
     }
@@ -29581,11 +29525,101 @@ function getInputs() {
         riskThreshold: riskThreshold,
         healthScore: healthScore,
         sarif: sarifString,
-        sastTimeout: sastTimeout
+        sastTimeout: sastTimeout,
+        triggerKnoxiq: triggerKnoxiq,
+        generatePdfReport: generatePdfReport
     };
     return inputs;
 }
 exports.getInputs = getInputs;
+
+
+/***/ }),
+
+/***/ 7764:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.run = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const tool_1 = __nccwpck_require__(302);
+const constants_1 = __nccwpck_require__(9042);
+const input_helper_1 = __nccwpck_require__(6455);
+function run() {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const inputs = (0, input_helper_1.getInputs)();
+            core.exportVariable('APPKNOX_ACCESS_TOKEN', inputs.appknoxAccessToken);
+            yield (0, tool_1.whoami)();
+            const fileID = yield (0, tool_1.upload)(inputs.filePath, inputs.triggerKnoxiq);
+            const sarif = inputs.sarif;
+            const sastTimeout = inputs.sastTimeout;
+            if (sarif === 'Enable') {
+                yield (0, tool_1.sarifReport)(fileID);
+            }
+            let ciCheckError;
+            try {
+                yield (0, tool_1.cicheck)(inputs.riskThreshold, fileID, sastTimeout, inputs.healthScore);
+            }
+            catch (err) {
+                ciCheckError = err;
+            }
+            if (inputs.generatePdfReport) {
+                try {
+                    const reportPaths = yield (0, tool_1.pdfReport)(fileID);
+                    core.setOutput(constants_1.Outputs.PdfReportPath, reportPaths.pdfPath);
+                    core.setOutput(constants_1.Outputs.PdfReportPasswordPath, reportPaths.passwordPath);
+                }
+                catch (err) {
+                    const message = err instanceof Error ? err.message : String(err);
+                    core.warning(`PDF report download failed: ${message}`);
+                }
+            }
+            if (ciCheckError) {
+                throw ciCheckError;
+            }
+        }
+        catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            core.setFailed(message);
+        }
+    });
+}
+exports.run = run;
 
 
 /***/ }),
@@ -29631,9 +29665,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.cicheck = exports.sarifReport = exports.upload = exports.whoami = void 0;
-const node_path_1 = __importDefault(__nccwpck_require__(9411));
-const node_fs_1 = __importDefault(__nccwpck_require__(7561));
+exports.cicheck = exports.pdfReport = exports.sarifReport = exports.upload = exports.whoami = void 0;
+const path_1 = __importDefault(__nccwpck_require__(1017));
+const fs_1 = __importDefault(__nccwpck_require__(7147));
 const tc = __importStar(__nccwpck_require__(7784));
 const exec = __importStar(__nccwpck_require__(1514));
 const constants_1 = __nccwpck_require__(9042);
@@ -29664,7 +29698,7 @@ function downloadAppknoxCLI(platform) {
     return __awaiter(this, void 0, void 0, function* () {
         const url = getAppknoxDownloadURL(platform);
         const appknoxPath = yield tc.downloadTool(url);
-        node_fs_1.default.chmodSync(appknoxPath, '755');
+        fs_1.default.chmodSync(appknoxPath, '755');
         return appknoxPath;
     });
 }
@@ -29672,11 +29706,11 @@ function getAppknoxToolPath() {
     return __awaiter(this, void 0, void 0, function* () {
         const foundPath = tc.find('appknox', constants_1.binaryVersion);
         if (foundPath) {
-            return node_path_1.default.join(foundPath, 'appknox');
+            return path_1.default.join(foundPath, 'appknox');
         }
         const appknoxPath = yield downloadAppknoxCLI(process.platform);
         yield tc.cacheFile(appknoxPath, 'appknox', 'appknox', constants_1.binaryVersion);
-        return node_path_1.default.join(tc.find('appknox', constants_1.binaryVersion), 'appknox');
+        return path_1.default.join(tc.find('appknox', constants_1.binaryVersion), 'appknox');
     });
 }
 function execBinary(path, args) {
@@ -29713,10 +29747,14 @@ function whoami() {
     });
 }
 exports.whoami = whoami;
-function upload(file_path) {
+function upload(file_path, triggerKnoxiq = false) {
     return __awaiter(this, void 0, void 0, function* () {
         const toolPath = yield getAppknoxToolPath();
-        const combinedOutput = yield execBinary(toolPath, ['upload', file_path]);
+        const args = ['upload', file_path];
+        if (triggerKnoxiq) {
+            args.push('--knoxiq');
+        }
+        const combinedOutput = yield execBinary(toolPath, args);
         if (combinedOutput.code > 0) {
             const errArr = combinedOutput.err.split('\n').filter(Boolean);
             throw new Error(errArr[errArr.length - 1]);
@@ -29728,10 +29766,7 @@ exports.upload = upload;
 function sarifReport(fileID) {
     return __awaiter(this, void 0, void 0, function* () {
         const toolPath = yield getAppknoxToolPath();
-        const args = [
-            'sarif',
-            fileID.toString(),
-        ];
+        const args = ['sarif', fileID.toString()];
         const combinedOutput = yield execBinary(toolPath, args);
         if (combinedOutput.code > 0) {
             const errArr = combinedOutput.err.split('\n').filter(Boolean);
@@ -29744,6 +29779,45 @@ function sarifReport(fileID) {
     });
 }
 exports.sarifReport = sarifReport;
+/**
+ * Creates and downloads the password-protected PDF report for a file.
+ */
+function pdfReport(fileID) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const toolPath = yield getAppknoxToolPath();
+        const createResult = yield execBinary(toolPath, [
+            'reports',
+            'create',
+            fileID.toString()
+        ]);
+        const reportID = createResult.output.trim();
+        if (createResult.code > 0) {
+            const errArr = createResult.err.split('\n').filter(Boolean);
+            throw new Error(errArr[errArr.length - 1] || 'Report creation failed');
+        }
+        if (!/^\d+$/.test(reportID)) {
+            throw new Error('Report creation did not return a valid numeric report ID');
+        }
+        const downloadResult = yield execBinary(toolPath, [
+            'reports',
+            'download',
+            'pdf',
+            reportID
+        ]);
+        if (downloadResult.code > 0) {
+            const errArr = downloadResult.err.split('\n').filter(Boolean);
+            throw new Error(errArr[errArr.length - 1] || 'PDF report download failed');
+        }
+        const reportDirectory = path_1.default.resolve('reports', fileID.toString());
+        const pdfPath = path_1.default.join(reportDirectory, `report_${fileID}.pdf`);
+        const passwordPath = path_1.default.join(reportDirectory, `report_${fileID}_password.txt`);
+        if (!fs_1.default.existsSync(pdfPath) || !fs_1.default.existsSync(passwordPath)) {
+            throw new Error(`PDF report download completed but expected files were not found in ${reportDirectory}`);
+        }
+        return { pdfPath, passwordPath };
+    });
+}
+exports.pdfReport = pdfReport;
 function cicheck(riskThreshold, fileID, sastTimeout, healthScore) {
     return __awaiter(this, void 0, void 0, function* () {
         const toolPath = yield getAppknoxToolPath();
@@ -29883,22 +29957,6 @@ module.exports = require("net");
 
 "use strict";
 module.exports = require("node:events");
-
-/***/ }),
-
-/***/ 7561:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("node:fs");
-
-/***/ }),
-
-/***/ 9411:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("node:path");
 
 /***/ }),
 
@@ -31693,12 +31751,18 @@ module.exports = parseParams
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
 /******/ 	
 /************************************************************************/
-/******/ 	
-/******/ 	// startup
-/******/ 	// Load entry module and return exports
-/******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __nccwpck_require__(6144);
-/******/ 	module.exports = __webpack_exports__;
-/******/ 	
+var __webpack_exports__ = {};
+// This entry need to be wrapped in an IIFE because it need to be in strict mode.
+(() => {
+"use strict";
+var exports = __webpack_exports__;
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const run_1 = __nccwpck_require__(7764);
+(0, run_1.run)();
+
+})();
+
+module.exports = __webpack_exports__;
 /******/ })()
 ;
