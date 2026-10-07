@@ -11,8 +11,14 @@ export async function run(): Promise<void> {
     const fileID = await upload(inputs.filePath, inputs.triggerKnoxiq);
     const sarif = inputs.sarif;
     const sastTimeout = inputs.sastTimeout;
+
+    let sarifError: unknown;
     if (sarif === 'Enable') {
-      await sarifReport(fileID);
+      try {
+        await sarifReport(fileID);
+      } catch (err) {
+        sarifError = err;
+      }
     }
 
     let ciCheckError: unknown;
@@ -40,6 +46,9 @@ export async function run(): Promise<void> {
 
     if (ciCheckError) {
       throw ciCheckError;
+    }
+    if (sarifError) {
+      throw sarifError;
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);

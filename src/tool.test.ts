@@ -60,6 +60,17 @@ describe('Appknox CLI tools', () => {
         expect.any(Object)
       );
     });
+
+    it.each(['', 'network failure', '101 warning'])(
+      'rejects an invalid file ID output: %p',
+      async output => {
+        mockExecResults([{stdout: output, code: 0}]);
+
+        await expect(upload('app.apk')).rejects.toThrow(
+          'valid numeric file ID'
+        );
+      }
+    );
   });
 
   describe('pdfReport', () => {

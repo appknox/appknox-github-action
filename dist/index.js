@@ -29588,8 +29588,14 @@ function run() {
             const fileID = yield (0, tool_1.upload)(inputs.filePath, inputs.triggerKnoxiq);
             const sarif = inputs.sarif;
             const sastTimeout = inputs.sastTimeout;
+            let sarifError;
             if (sarif === 'Enable') {
-                yield (0, tool_1.sarifReport)(fileID);
+                try {
+                    yield (0, tool_1.sarifReport)(fileID);
+                }
+                catch (err) {
+                    sarifError = err;
+                }
             }
             let ciCheckError;
             try {
@@ -29611,6 +29617,9 @@ function run() {
             }
             if (ciCheckError) {
                 throw ciCheckError;
+            }
+            if (sarifError) {
+                throw sarifError;
             }
         }
         catch (err) {
@@ -29759,7 +29768,11 @@ function upload(file_path, triggerKnoxiq = false) {
             const errArr = combinedOutput.err.split('\n').filter(Boolean);
             throw new Error(errArr[errArr.length - 1]);
         }
-        return Number.parseInt(combinedOutput.output);
+        const fileIDOutput = combinedOutput.output.trim();
+        if (!/^\d+$/.test(fileIDOutput)) {
+            throw new Error(`Upload did not return a valid numeric file ID. Output: ${fileIDOutput || '<empty>'}`);
+        }
+        return Number.parseInt(fileIDOutput, 10);
     });
 }
 exports.upload = upload;

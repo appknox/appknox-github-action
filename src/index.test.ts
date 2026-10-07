@@ -36,6 +36,7 @@ describe('run', () => {
     });
     mockedWhoami.mockResolvedValue();
     mockedUpload.mockResolvedValue(101);
+    mockedSarifReport.mockResolvedValue({output: '', err: '', code: 0});
     mockedCicheck.mockResolvedValue();
     mockedPdfReport.mockResolvedValue({
       pdfPath: '/workspace/reports/101/report_101.pdf',
@@ -116,6 +117,39 @@ describe('run', () => {
     expect(mockedCore.warning).toHaveBeenCalledWith(
       'PDF report download failed: report unavailable'
     );
+    expect(mockedCore.setFailed).toHaveBeenCalledWith(
+      'vulnerabilities detected'
+    );
+  });
+
+  it('continues through the CI check and PDF report after a SARIF failure', async () => {
+    mockedGetInputs.mockReturnValue({
+      ...mockedGetInputs(),
+      sarif: SarifOptions.Enable,
+      generatePdfReport: true
+    });
+    mockedSarifReport.mockRejectedValue(new Error('SARIF unavailable'));
+
+    await run();
+
+    expect(mockedCicheck).toHaveBeenCalled();
+    expect(mockedPdfReport).toHaveBeenCalledWith(101);
+    expect(mockedCore.setOutput).toHaveBeenCalled();
+    expect(mockedCore.setFailed).toHaveBeenCalledWith('SARIF unavailable');
+  });
+
+  it('prioritizes a CI check failure over an earlier SARIF failure', async () => {
+    mockedGetInputs.mockReturnValue({
+      ...mockedGetInputs(),
+      sarif: SarifOptions.Enable,
+      generatePdfReport: true
+    });
+    mockedSarifReport.mockRejectedValue(new Error('SARIF unavailable'));
+    mockedCicheck.mockRejectedValue(new Error('vulnerabilities detected'));
+
+    await run();
+
+    expect(mockedPdfReport).toHaveBeenCalledWith(101);
     expect(mockedCore.setFailed).toHaveBeenCalledWith(
       'vulnerabilities detected'
     );

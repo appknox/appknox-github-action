@@ -105,7 +105,15 @@ export async function upload(
     const errArr = combinedOutput.err.split('\n').filter(Boolean);
     throw new Error(errArr[errArr.length - 1]);
   }
-  return Number.parseInt(combinedOutput.output);
+  const fileIDOutput = combinedOutput.output.trim();
+  if (!/^\d+$/.test(fileIDOutput)) {
+    throw new Error(
+      `Upload did not return a valid numeric file ID. Output: ${
+        fileIDOutput || '<empty>'
+      }`
+    );
+  }
+  return Number.parseInt(fileIDOutput, 10);
 }
 
 export async function sarifReport(fileID: number): Promise<ExecOutput> {
