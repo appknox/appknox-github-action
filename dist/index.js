@@ -29703,47 +29703,78 @@ const core = __importStar(__nccwpck_require__(2186));
 const tool_1 = __nccwpck_require__(302);
 const constants_1 = __nccwpck_require__(9042);
 const input_helper_1 = __nccwpck_require__(6455);
+/**
+ * Uploads the binary, forcing KnoxIQ triage when the exploit-likelihood
+ * gate is selected (the gate only works against triaged results)
+ */
+function uploadFile(inputs) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const requestKnoxiq = inputs.triggerKnoxiq ||
+            inputs.threshold.type === constants_1.ThresholdTypeOptions.EXPLOIT_LIKELIHOOD;
+        if (requestKnoxiq && !inputs.triggerKnoxiq) {
+            core.info('Requesting KnoxIQ triage automatically because threshold_type is EXPLOIT_LIKELIHOOD');
+        }
+        return (0, tool_1.upload)(inputs.filePath, requestKnoxiq);
+    });
+}
+/**
+ * Runs the SARIF report when enabled, capturing any error so later steps
+ * still run
+ */
+function trySarif(sarif, fileID) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (sarif !== 'Enable') {
+            return undefined;
+        }
+        try {
+            yield (0, tool_1.sarifReport)(fileID);
+            return undefined;
+        }
+        catch (err) {
+            return err;
+        }
+    });
+}
+/** Runs the CI check, capturing the error so reporting can still run */
+function tryCicheck(inputs, fileID) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            yield (0, tool_1.cicheck)(fileID, inputs.threshold, inputs.sastTimeout);
+            return undefined;
+        }
+        catch (err) {
+            return err;
+        }
+    });
+}
+/** Downloads the PDF report when enabled; failures warn instead of failing */
+function tryPdfReport(generatePdfReport, fileID) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!generatePdfReport) {
+            return;
+        }
+        try {
+            const reportPaths = yield (0, tool_1.pdfReport)(fileID);
+            core.setOutput(constants_1.Outputs.PdfReportPath, reportPaths.pdfPath);
+            core.setOutput(constants_1.Outputs.PdfReportPasswordPath, reportPaths.passwordPath);
+        }
+        catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            core.warning(`PDF report download failed: ${message}`);
+        }
+    });
+}
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const inputs = (0, input_helper_1.getInputs)();
             core.exportVariable('APPKNOX_ACCESS_TOKEN', inputs.appknoxAccessToken);
             yield (0, tool_1.whoami)();
-            const requestKnoxiq = inputs.triggerKnoxiq ||
-                inputs.threshold.type === constants_1.ThresholdTypeOptions.EXPLOIT_LIKELIHOOD;
-            if (requestKnoxiq && !inputs.triggerKnoxiq) {
-                core.info('Requesting KnoxIQ triage automatically because threshold_type is EXPLOIT_LIKELIHOOD');
-            }
-            const fileID = yield (0, tool_1.upload)(inputs.filePath, requestKnoxiq);
-            const sarif = inputs.sarif;
-            const sastTimeout = inputs.sastTimeout;
-            let sarifError;
-            if (sarif === 'Enable') {
-                try {
-                    yield (0, tool_1.sarifReport)(fileID);
-                }
-                catch (err) {
-                    sarifError = err;
-                }
-            }
-            let ciCheckError;
-            try {
-                yield (0, tool_1.cicheck)(fileID, inputs.threshold, sastTimeout);
-            }
-            catch (err) {
-                ciCheckError = err;
-            }
-            if (inputs.generatePdfReport) {
-                try {
-                    const reportPaths = yield (0, tool_1.pdfReport)(fileID);
-                    core.setOutput(constants_1.Outputs.PdfReportPath, reportPaths.pdfPath);
-                    core.setOutput(constants_1.Outputs.PdfReportPasswordPath, reportPaths.passwordPath);
-                }
-                catch (err) {
-                    const message = err instanceof Error ? err.message : String(err);
-                    core.warning(`PDF report download failed: ${message}`);
-                }
-            }
+            const fileID = yield uploadFile(inputs);
+            const sarifError = yield trySarif(inputs.sarif, fileID);
+            const ciCheckError = yield tryCicheck(inputs, fileID);
+            yield tryPdfReport(inputs.generatePdfReport, fileID);
+            // The CI check result outranks a SARIF failure
             if (ciCheckError) {
                 throw ciCheckError;
             }
