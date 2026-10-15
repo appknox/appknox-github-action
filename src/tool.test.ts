@@ -2,7 +2,12 @@ import fs from 'fs';
 import path from 'path';
 import * as exec from '@actions/exec';
 import * as tc from '@actions/tool-cache';
-import {pdfReport, upload} from './tool';
+import {cicheck, pdfReport, upload} from './tool';
+import {
+  ExploitLikelihoodOptions,
+  RiskThresholdOptions,
+  ThresholdTypeOptions
+} from './constants';
 
 jest.mock('@actions/exec', () => ({exec: jest.fn()}));
 jest.mock('@actions/tool-cache', () => ({
@@ -71,6 +76,66 @@ describe('Appknox CLI tools', () => {
         );
       }
     );
+  });
+
+  describe('cicheck', () => {
+    it('passes only the risk threshold flag in RISK mode', async () => {
+      mockExecResults([{code: 0}]);
+
+      await cicheck(
+        101,
+        {type: ThresholdTypeOptions.RISK, value: RiskThresholdOptions.HIGH},
+        30
+      );
+
+      expect(mockedExec.exec).toHaveBeenCalledWith(
+        path.join('/cached', 'appknox'),
+        ['cicheck', '101', '--timeout', '30', '--risk-threshold', 'HIGH'],
+        expect.any(Object)
+      );
+    });
+
+    it('passes only the health score flag in HEALTH_SCORE mode', async () => {
+      mockExecResults([{code: 0}]);
+
+      await cicheck(
+        101,
+        {type: ThresholdTypeOptions.HEALTH_SCORE, value: 70},
+        45
+      );
+
+      expect(mockedExec.exec).toHaveBeenCalledWith(
+        path.join('/cached', 'appknox'),
+        ['cicheck', '101', '--timeout', '45', '--health-score-threshold', '70'],
+        expect.any(Object)
+      );
+    });
+
+    it('passes only the exploit likelihood flag in EXPLOIT_LIKELIHOOD mode', async () => {
+      mockExecResults([{code: 0}]);
+
+      await cicheck(
+        101,
+        {
+          type: ThresholdTypeOptions.EXPLOIT_LIKELIHOOD,
+          value: ExploitLikelihoodOptions.HIGH
+        },
+        30
+      );
+
+      expect(mockedExec.exec).toHaveBeenCalledWith(
+        path.join('/cached', 'appknox'),
+        [
+          'cicheck',
+          '101',
+          '--timeout',
+          '30',
+          '--exploit-likelihood-threshold',
+          'HIGH'
+        ],
+        expect.any(Object)
+      );
+    });
   });
 
   describe('pdfReport', () => {

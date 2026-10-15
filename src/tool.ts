@@ -2,7 +2,8 @@ import path from 'path';
 import fs from 'fs';
 import * as tc from '@actions/tool-cache';
 import * as exec from '@actions/exec';
-import {binaryVersion, RiskThresholdOptions} from './constants';
+import {binaryVersion, ThresholdTypeOptions} from './constants';
+import {Threshold} from './appknox-inputs';
 
 interface AppknoxBinaryConfig {
   name: string;
@@ -183,10 +184,9 @@ export async function pdfReport(fileID: number): Promise<PdfReportPaths> {
 }
 
 export async function cicheck(
-  riskThreshold: RiskThresholdOptions | undefined,
   fileID: number,
-  sastTimeout: number,
-  healthScore?: number
+  threshold: Threshold,
+  sastTimeout: number
 ): Promise<void> {
   const toolPath = await getAppknoxToolPath();
   const args = [
@@ -195,10 +195,16 @@ export async function cicheck(
     '--timeout',
     sastTimeout.toString()
   ];
-  if (riskThreshold !== undefined) {
-    args.push('--risk-threshold', riskThreshold);
-  } else if (healthScore !== undefined) {
-    args.push('--health-score-threshold', healthScore.toString());
+  switch (threshold.type) {
+    case ThresholdTypeOptions.RISK:
+      args.push('--risk-threshold', threshold.value);
+      break;
+    case ThresholdTypeOptions.HEALTH_SCORE:
+      args.push('--health-score-threshold', threshold.value.toString());
+      break;
+    case ThresholdTypeOptions.EXPLOIT_LIKELIHOOD:
+      args.push('--exploit-likelihood-threshold', threshold.value);
+      break;
   }
   const combinedOutput = await execBinary(toolPath, args);
   if (combinedOutput.code > 0) {

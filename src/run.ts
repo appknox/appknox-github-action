@@ -1,6 +1,6 @@
 import * as core from '@actions/core';
 import {cicheck, pdfReport, sarifReport, upload, whoami} from './tool';
-import {Outputs} from './constants';
+import {Outputs, ThresholdTypeOptions} from './constants';
 import {getInputs} from './input-helper';
 
 export async function run(): Promise<void> {
@@ -8,7 +8,15 @@ export async function run(): Promise<void> {
     const inputs = getInputs();
     core.exportVariable('APPKNOX_ACCESS_TOKEN', inputs.appknoxAccessToken);
     await whoami();
-    const fileID = await upload(inputs.filePath, inputs.triggerKnoxiq);
+    const requestKnoxiq =
+      inputs.triggerKnoxiq ||
+      inputs.threshold.type === ThresholdTypeOptions.EXPLOIT_LIKELIHOOD;
+    if (requestKnoxiq && !inputs.triggerKnoxiq) {
+      core.info(
+        'Requesting KnoxIQ triage automatically because threshold_type is EXPLOIT_LIKELIHOOD'
+      );
+    }
+    const fileID = await upload(inputs.filePath, requestKnoxiq);
     const sarif = inputs.sarif;
     const sastTimeout = inputs.sastTimeout;
 
@@ -23,12 +31,7 @@ export async function run(): Promise<void> {
 
     let ciCheckError: unknown;
     try {
-      await cicheck(
-        inputs.riskThreshold,
-        fileID,
-        sastTimeout,
-        inputs.healthScore
-      );
+      await cicheck(fileID, inputs.threshold, sastTimeout);
     } catch (err) {
       ciCheckError = err;
     }

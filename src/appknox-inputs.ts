@@ -1,4 +1,21 @@
-import {RiskThresholdOptions, SarifOptions} from './constants';
+import {
+  ExploitLikelihoodOptions,
+  RiskThresholdOptions,
+  SarifOptions,
+  ThresholdTypeOptions
+} from './constants';
+
+/**
+ * The single threshold the CI check enforces. The type decides which value is
+ * expected, so exactly one threshold can ever be selected.
+ */
+export type Threshold =
+  | {type: ThresholdTypeOptions.RISK; value: RiskThresholdOptions}
+  | {type: ThresholdTypeOptions.HEALTH_SCORE; value: number}
+  | {
+      type: ThresholdTypeOptions.EXPLOIT_LIKELIHOOD;
+      value: ExploitLikelihoodOptions;
+    };
 
 export interface AppknoxInputs {
   /**
@@ -12,14 +29,9 @@ export interface AppknoxInputs {
   filePath: string;
 
   /**
-   * Minimum risk to fail CI
+   * Threshold to enforce during the CI check
    */
-  riskThreshold?: RiskThresholdOptions;
-
-  /**
-   * Health score threshold (0-100). Mutually exclusive with riskThreshold.
-   */
-  healthScore?: number;
+  threshold: Threshold;
 
   /**
    * Enable SARIF format

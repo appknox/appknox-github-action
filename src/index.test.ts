@@ -1,12 +1,19 @@
 import * as core from '@actions/core';
 import {getInputs} from './input-helper';
 import {cicheck, pdfReport, sarifReport, upload, whoami} from './tool';
-import {Outputs, RiskThresholdOptions, SarifOptions} from './constants';
+import {
+  ExploitLikelihoodOptions,
+  Outputs,
+  RiskThresholdOptions,
+  SarifOptions,
+  ThresholdTypeOptions
+} from './constants';
 import {run} from './run';
 
 jest.mock('@actions/core', () => ({
   exportVariable: jest.fn(),
   setOutput: jest.fn(),
+  info: jest.fn(),
   warning: jest.fn(),
   setFailed: jest.fn()
 }));
@@ -28,7 +35,10 @@ describe('run', () => {
     mockedGetInputs.mockReturnValue({
       appknoxAccessToken: 'token',
       filePath: 'app.apk',
-      riskThreshold: RiskThresholdOptions.HIGH,
+      threshold: {
+        type: ThresholdTypeOptions.RISK,
+        value: RiskThresholdOptions.HIGH
+      },
       sarif: SarifOptions.Disable,
       sastTimeout: 30,
       triggerKnoxiq: false,
@@ -50,6 +60,25 @@ describe('run', () => {
     expect(mockedUpload).toHaveBeenCalledWith('app.apk', false);
     expect(mockedSarifReport).not.toHaveBeenCalled();
     expect(mockedPdfReport).not.toHaveBeenCalled();
+    expect(mockedCore.setFailed).not.toHaveBeenCalled();
+  });
+
+  it('requests KnoxIQ triage automatically when gating on exploit likelihood', async () => {
+    mockedGetInputs.mockReturnValue({
+      ...mockedGetInputs(),
+      triggerKnoxiq: false,
+      threshold: {
+        type: ThresholdTypeOptions.EXPLOIT_LIKELIHOOD,
+        value: ExploitLikelihoodOptions.HIGH
+      }
+    });
+
+    await run();
+
+    expect(mockedUpload).toHaveBeenCalledWith('app.apk', true);
+    expect(mockedCore.info).toHaveBeenCalledWith(
+      'Requesting KnoxIQ triage automatically because threshold_type is EXPLOIT_LIKELIHOOD'
+    );
     expect(mockedCore.setFailed).not.toHaveBeenCalled();
   });
 

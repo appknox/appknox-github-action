@@ -29394,7 +29394,7 @@ module.exports = v4;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.binaryVersion = exports.RiskThresholdOptions = exports.SarifOptions = exports.Outputs = exports.Inputs = void 0;
+exports.binaryVersion = exports.ExploitLikelihoodOptions = exports.ThresholdTypeOptions = exports.RiskThresholdOptions = exports.SarifOptions = exports.Outputs = exports.Inputs = void 0;
 var Inputs;
 (function (Inputs) {
     Inputs["AppknoxAccessToken"] = "appknox_access_token";
@@ -29403,6 +29403,8 @@ var Inputs;
     Inputs["Sarif"] = "sarif";
     Inputs["SastTimeout"] = "sast_timeout";
     Inputs["HealthScore"] = "health_score";
+    Inputs["ThresholdType"] = "threshold_type";
+    Inputs["ExploitLikelihoodThreshold"] = "exploit_likelihood_threshold";
     Inputs["TriggerKnoxiq"] = "trigger_knoxiq";
     Inputs["GeneratePdfReport"] = "generate_pdf_report";
 })(Inputs = exports.Inputs || (exports.Inputs = {}));
@@ -29441,7 +29443,37 @@ var RiskThresholdOptions;
      */
     RiskThresholdOptions["CRITICAL"] = "CRITICAL";
 })(RiskThresholdOptions = exports.RiskThresholdOptions || (exports.RiskThresholdOptions = {}));
-exports.binaryVersion = '1.8.8';
+var ThresholdTypeOptions;
+(function (ThresholdTypeOptions) {
+    /**
+     * Fail CI based on the CVSS risk threshold
+     */
+    ThresholdTypeOptions["RISK"] = "RISK";
+    /**
+     * Fail CI based on the security health score
+     */
+    ThresholdTypeOptions["HEALTH_SCORE"] = "HEALTH_SCORE";
+    /**
+     * Fail CI based on the KnoxIQ exploit likelihood of triaged vulnerabilities
+     */
+    ThresholdTypeOptions["EXPLOIT_LIKELIHOOD"] = "EXPLOIT_LIKELIHOOD";
+})(ThresholdTypeOptions = exports.ThresholdTypeOptions || (exports.ThresholdTypeOptions = {}));
+var ExploitLikelihoodOptions;
+(function (ExploitLikelihoodOptions) {
+    /**
+     * Fail CI when a triaged vulnerability has exploit likelihood LOW or higher
+     */
+    ExploitLikelihoodOptions["LOW"] = "LOW";
+    /**
+     * Fail CI when a triaged vulnerability has exploit likelihood MEDIUM or higher
+     */
+    ExploitLikelihoodOptions["MEDIUM"] = "MEDIUM";
+    /**
+     * Fail CI when a triaged vulnerability has exploit likelihood HIGH
+     */
+    ExploitLikelihoodOptions["HIGH"] = "HIGH";
+})(ExploitLikelihoodOptions = exports.ExploitLikelihoodOptions || (exports.ExploitLikelihoodOptions = {}));
+exports.binaryVersion = '1.8.9';
 
 
 /***/ }),
@@ -29494,36 +29526,11 @@ function getInputs() {
     if (!sarifString) {
         throw new Error(`Unrecognized ${constants_1.Inputs.Sarif} input. Provided: ${sarifStringInput}. Available options: ${Object.keys(constants_1.SarifOptions)}`);
     }
-    const riskThresholdInput = core.getInput(constants_1.Inputs.RiskThreshold);
-    const healthScoreInput = core.getInput(constants_1.Inputs.HealthScore);
-    if (riskThresholdInput && healthScoreInput) {
-        throw new Error('Only one of risk_threshold or health_score may be provided, not both.');
-    }
-    let riskThreshold;
-    let healthScore;
-    if (!riskThresholdInput && !healthScoreInput) {
-        core.warning('Neither risk_threshold nor health_score was provided. Defaulting to risk_threshold: LOW. ' +
-            'Please explicitly set one of these inputs in your workflow.');
-        riskThreshold = constants_1.RiskThresholdOptions.LOW;
-    }
-    if (riskThresholdInput) {
-        riskThreshold = constants_1.RiskThresholdOptions[riskThresholdInput];
-        if (!riskThreshold) {
-            throw new Error(`Unrecognized ${constants_1.Inputs.RiskThreshold} input. Provided: ${riskThresholdInput}. Available options: ${Object.keys(constants_1.RiskThresholdOptions)}`);
-        }
-    }
-    if (healthScoreInput) {
-        const parsed = Number(healthScoreInput);
-        if (Number.isNaN(parsed) || parsed < 0 || parsed > 100) {
-            throw new Error(`Invalid ${constants_1.Inputs.HealthScore} input. Provided: ${healthScoreInput}. Must be a number between 0 and 100.`);
-        }
-        healthScore = parsed;
-    }
+    const threshold = resolveThreshold();
     const inputs = {
         appknoxAccessToken: accessToken,
         filePath: path,
-        riskThreshold: riskThreshold,
-        healthScore: healthScore,
+        threshold: threshold,
         sarif: sarifString,
         sastTimeout: sastTimeout,
         triggerKnoxiq: triggerKnoxiq,
@@ -29532,6 +29539,123 @@ function getInputs() {
     return inputs;
 }
 exports.getInputs = getInputs;
+/**
+ * Resolves the single threshold to enforce. When threshold_type is not set,
+ * the type is inferred from risk_threshold / health_score for backward
+ * compatibility. When it is set, exactly one matching value is expected.
+ */
+function resolveThreshold() {
+    const thresholdTypeInput = core.getInput(constants_1.Inputs.ThresholdType);
+    const riskThresholdInput = core.getInput(constants_1.Inputs.RiskThreshold);
+    const healthScoreInput = core.getInput(constants_1.Inputs.HealthScore);
+    const exploitLikelihoodInput = core.getInput(constants_1.Inputs.ExploitLikelihoodThreshold);
+    if (exploitLikelihoodInput && !thresholdTypeInput) {
+        throw new Error(`${constants_1.Inputs.ExploitLikelihoodThreshold} requires ${constants_1.Inputs.ThresholdType}: ${constants_1.ThresholdTypeOptions.EXPLOIT_LIKELIHOOD}`);
+    }
+    if (!thresholdTypeInput) {
+        return resolveInferredThreshold(riskThresholdInput, healthScoreInput);
+    }
+    const thresholdType = constants_1.ThresholdTypeOptions[thresholdTypeInput];
+    if (!thresholdType) {
+        throw new Error(`Unrecognized ${constants_1.Inputs.ThresholdType} input. Provided: ${thresholdTypeInput}. Available options: ${Object.keys(constants_1.ThresholdTypeOptions)}`);
+    }
+    const strayThresholds = getStrayThresholds(thresholdType, {
+        [constants_1.Inputs.RiskThreshold]: riskThresholdInput,
+        [constants_1.Inputs.HealthScore]: healthScoreInput,
+        [constants_1.Inputs.ExploitLikelihoodThreshold]: exploitLikelihoodInput
+    });
+    if (strayThresholds.length > 0) {
+        throw new Error(`${constants_1.Inputs.ThresholdType} is ${thresholdType} but ${strayThresholds.join(' and ')} was also provided. Pick exactly one threshold.`);
+    }
+    switch (thresholdType) {
+        case constants_1.ThresholdTypeOptions.RISK: {
+            if (!riskThresholdInput) {
+                core.warning(`${constants_1.Inputs.ThresholdType} is ${constants_1.ThresholdTypeOptions.RISK} but ${constants_1.Inputs.RiskThreshold} was not provided. Defaulting to ${constants_1.Inputs.RiskThreshold}: ${constants_1.RiskThresholdOptions.LOW}.`);
+                return { type: thresholdType, value: constants_1.RiskThresholdOptions.LOW };
+            }
+            return {
+                type: thresholdType,
+                value: parseRiskThreshold(riskThresholdInput)
+            };
+        }
+        case constants_1.ThresholdTypeOptions.HEALTH_SCORE: {
+            if (!healthScoreInput) {
+                throw new Error(`${constants_1.Inputs.ThresholdType} is ${constants_1.ThresholdTypeOptions.HEALTH_SCORE} but ${constants_1.Inputs.HealthScore} was not provided.`);
+            }
+            return { type: thresholdType, value: parseHealthScore(healthScoreInput) };
+        }
+        case constants_1.ThresholdTypeOptions.EXPLOIT_LIKELIHOOD: {
+            if (!exploitLikelihoodInput) {
+                throw new Error(`${constants_1.Inputs.ThresholdType} is ${constants_1.ThresholdTypeOptions.EXPLOIT_LIKELIHOOD} but ${constants_1.Inputs.ExploitLikelihoodThreshold} was not provided.`);
+            }
+            const exploitLikelihood = constants_1.ExploitLikelihoodOptions[exploitLikelihoodInput];
+            if (!exploitLikelihood) {
+                throw new Error(`Unrecognized ${constants_1.Inputs.ExploitLikelihoodThreshold} input. Provided: ${exploitLikelihoodInput}. Available options: ${Object.keys(constants_1.ExploitLikelihoodOptions)}`);
+            }
+            return { type: thresholdType, value: exploitLikelihood };
+        }
+    }
+    // Unreachable while the switch covers every ThresholdTypeOptions member
+    throw new Error(`Unrecognized ${constants_1.Inputs.ThresholdType} input: ${thresholdType}`);
+}
+/**
+ * Threshold inputs that do not belong to the selected threshold type
+ */
+function getStrayThresholds(thresholdType, provided) {
+    const others = {
+        [constants_1.ThresholdTypeOptions.RISK]: [
+            constants_1.Inputs.HealthScore,
+            constants_1.Inputs.ExploitLikelihoodThreshold
+        ],
+        [constants_1.ThresholdTypeOptions.HEALTH_SCORE]: [
+            constants_1.Inputs.RiskThreshold,
+            constants_1.Inputs.ExploitLikelihoodThreshold
+        ],
+        [constants_1.ThresholdTypeOptions.EXPLOIT_LIKELIHOOD]: [
+            constants_1.Inputs.RiskThreshold,
+            constants_1.Inputs.HealthScore
+        ]
+    };
+    return others[thresholdType].filter(input => provided[input]);
+}
+/**
+ * Legacy behavior when threshold_type is not set: infer the type from the
+ * threshold value that was provided
+ */
+function resolveInferredThreshold(riskThresholdInput, healthScoreInput) {
+    if (riskThresholdInput && healthScoreInput) {
+        throw new Error('Only one of risk_threshold or health_score may be provided, not both.');
+    }
+    if (riskThresholdInput) {
+        return {
+            type: constants_1.ThresholdTypeOptions.RISK,
+            value: parseRiskThreshold(riskThresholdInput)
+        };
+    }
+    if (healthScoreInput) {
+        return {
+            type: constants_1.ThresholdTypeOptions.HEALTH_SCORE,
+            value: parseHealthScore(healthScoreInput)
+        };
+    }
+    core.warning('Neither threshold_type nor risk_threshold/health_score was provided. ' +
+        'Defaulting to risk_threshold: LOW. Please explicitly set threshold_type in your workflow.');
+    return { type: constants_1.ThresholdTypeOptions.RISK, value: constants_1.RiskThresholdOptions.LOW };
+}
+function parseRiskThreshold(input) {
+    const riskThreshold = constants_1.RiskThresholdOptions[input];
+    if (!riskThreshold) {
+        throw new Error(`Unrecognized ${constants_1.Inputs.RiskThreshold} input. Provided: ${input}. Available options: ${Object.keys(constants_1.RiskThresholdOptions)}`);
+    }
+    return riskThreshold;
+}
+function parseHealthScore(input) {
+    const parsed = Number(input);
+    if (Number.isNaN(parsed) || parsed < 0 || parsed > 100) {
+        throw new Error(`Invalid ${constants_1.Inputs.HealthScore} input. Provided: ${input}. Must be a number between 0 and 100.`);
+    }
+    return parsed;
+}
 
 
 /***/ }),
@@ -29585,7 +29709,12 @@ function run() {
             const inputs = (0, input_helper_1.getInputs)();
             core.exportVariable('APPKNOX_ACCESS_TOKEN', inputs.appknoxAccessToken);
             yield (0, tool_1.whoami)();
-            const fileID = yield (0, tool_1.upload)(inputs.filePath, inputs.triggerKnoxiq);
+            const requestKnoxiq = inputs.triggerKnoxiq ||
+                inputs.threshold.type === constants_1.ThresholdTypeOptions.EXPLOIT_LIKELIHOOD;
+            if (requestKnoxiq && !inputs.triggerKnoxiq) {
+                core.info('Requesting KnoxIQ triage automatically because threshold_type is EXPLOIT_LIKELIHOOD');
+            }
+            const fileID = yield (0, tool_1.upload)(inputs.filePath, requestKnoxiq);
             const sarif = inputs.sarif;
             const sastTimeout = inputs.sastTimeout;
             let sarifError;
@@ -29599,7 +29728,7 @@ function run() {
             }
             let ciCheckError;
             try {
-                yield (0, tool_1.cicheck)(inputs.riskThreshold, fileID, sastTimeout, inputs.healthScore);
+                yield (0, tool_1.cicheck)(fileID, inputs.threshold, sastTimeout);
             }
             catch (err) {
                 ciCheckError = err;
@@ -29831,7 +29960,7 @@ function pdfReport(fileID) {
     });
 }
 exports.pdfReport = pdfReport;
-function cicheck(riskThreshold, fileID, sastTimeout, healthScore) {
+function cicheck(fileID, threshold, sastTimeout) {
     return __awaiter(this, void 0, void 0, function* () {
         const toolPath = yield getAppknoxToolPath();
         const args = [
@@ -29840,11 +29969,16 @@ function cicheck(riskThreshold, fileID, sastTimeout, healthScore) {
             '--timeout',
             sastTimeout.toString()
         ];
-        if (riskThreshold !== undefined) {
-            args.push('--risk-threshold', riskThreshold);
-        }
-        else if (healthScore !== undefined) {
-            args.push('--health-score-threshold', healthScore.toString());
+        switch (threshold.type) {
+            case constants_1.ThresholdTypeOptions.RISK:
+                args.push('--risk-threshold', threshold.value);
+                break;
+            case constants_1.ThresholdTypeOptions.HEALTH_SCORE:
+                args.push('--health-score-threshold', threshold.value.toString());
+                break;
+            case constants_1.ThresholdTypeOptions.EXPLOIT_LIKELIHOOD:
+                args.push('--exploit-likelihood-threshold', threshold.value);
+                break;
         }
         const combinedOutput = yield execBinary(toolPath, args);
         if (combinedOutput.code > 0) {

@@ -1,6 +1,6 @@
 # Appknox Github Action
 
-The Appknox Github action allows you to perform Appknox security scan on your mobile application binary. The APK/IPA built from your CI pipeline will be uploaded to Appknox platform which performs static scan and the build will be errored according to the chosen risk threshold or health score.
+The Appknox Github action allows you to perform Appknox security scan on your mobile application binary. The APK/IPA built from your CI pipeline will be uploaded to Appknox platform which performs static scan and the build will be errored according to the chosen risk threshold, health score, or KnoxIQ exploit likelihood.
 
 ## How to use it?
 
@@ -34,8 +34,10 @@ In your Github action workflow file (eg: `.github/workflows/build.yml`), insert 
 |-------------------------|------------------------------|
 | `appknox_access_token`  | Personal access token secret |
 | `file_path`             | File path to the mobile application binary to be uploaded |
-| `risk_threshold`        | Minimum risk level to fail CI. Mutually exclusive with `health_score` — exactly one must be provided. <br><br>Accepted values: `CRITICAL, HIGH, MEDIUM & LOW` |
-| `health_score`          | Minimum health score (0–100) required to pass CI. Mutually exclusive with `risk_threshold` — exactly one must be provided. <br><br>Accepted values: `0` to `100` |
+| `risk_threshold`        | Minimum risk level to fail CI. Mutually exclusive with `health_score` and `exploit_likelihood_threshold` — exactly one must be provided. <br><br>Accepted values: `CRITICAL, HIGH, MEDIUM & LOW` |
+| `health_score`          | Minimum health score (0–100) required to pass CI. Mutually exclusive with `risk_threshold` and `exploit_likelihood_threshold` — exactly one must be provided. <br><br>Accepted values: `0` to `100` |
+| `threshold_type`         | Which threshold to enforce — pick exactly one. Required when using `exploit_likelihood_threshold`. <br><br>Accepted values: `RISK`, `HEALTH_SCORE`, `EXPLOIT_LIKELIHOOD` |
+| `exploit_likelihood_threshold` | Minimum KnoxIQ exploit-likelihood level to fail CI, based on real-world exploitability rather than raw CVSS severity. Requires `threshold_type: EXPLOIT_LIKELIHOOD`; KnoxIQ triage is requested automatically during upload regardless of `trigger_knoxiq`. The check waits for triage and falls back to plain SAST results if triage doesn't complete in time, so the gate only works against triaged results. <br><br>Accepted values: `LOW`, `MEDIUM`, `HIGH` |
 | `sarif`                 | Enables SARIF report generation. <br><br>Accepted values: `Enable & Disable` <br><br>Default: `Disable` |
 | `sast_timeout`          | Static scan timeout duration in minutes. <br><br>Default: `30` |
 | `trigger_knoxiq`        | Requests KnoxIQ triage for the uploaded build. KnoxIQ results are reflected by the CI check. <br><br>Accepted values: `true`, `false` <br><br>Default: `false` |
@@ -142,6 +144,20 @@ _This example demonstrates how to run Appknox Scan to generate a SARIF report an
             name: sarif-report
             path: report.sarif
 ```
+### Appknox Scan with KnoxIQ Exploit Likelihood Gate
+
+_This example fails CI when a triaged vulnerability's exploit likelihood is at or above `HIGH`. KnoxIQ triage is requested automatically during upload, even when `trigger_knoxiq` is not set. The check waits for triage to finish, bounded by `sast_timeout` plus the CLI's KnoxIQ wait time (default: 30 minutes); if triage doesn't complete in that window, the CLI falls back to plain SAST results and the likelihood gate has nothing to fail on._
+
+```yml
+    - name: Appknox Scan
+      uses: appknox/appknox-github-action@1.2.1
+      with:
+        appknox_access_token: ${{ secrets.APPKNOX_ACCESS_TOKEN }}
+        file_path: app/build/outputs/apk/debug/app-debug.apk
+        threshold_type: EXPLOIT_LIKELIHOOD
+        exploit_likelihood_threshold: HIGH
+```
+
 ### Appknox Scan with KnoxIQ and a Downloadable PDF Report
 
 The action downloads the PDF and password file to `reports/<file-id>/`. Use the
