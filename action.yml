@@ -21,6 +21,25 @@ inputs:
   health_score:
     description: 'Minimum health score (0-100) to pass CI. Mutually exclusive with risk_threshold. Exactly one must be provided.'
     required: false
+  threshold_type:
+    description: 'Which threshold to enforce - pick exactly one. Valid options: RISK, HEALTH_SCORE, EXPLOIT_LIKELIHOOD'
+    required: false
+  exploit_likelihood_threshold:
+    description: 'Minimum KnoxIQ exploit-likelihood level to fail CI, based on real-world exploitability. Required when threshold_type is EXPLOIT_LIKELIHOOD. Automatically requests KnoxIQ triage during upload. Valid options: LOW, MEDIUM, HIGH'
+    required: false
+  trigger_knoxiq:
+    description: 'Request KnoxIQ triage during upload. Defaults to false'
+    required: false
+    default: 'false'
+  generate_pdf_report:
+    description: 'Download the password-protected PDF report after the CI check. Defaults to false'
+    required: false
+    default: 'false'
+outputs:
+  pdf_report_path:
+    description: 'Absolute path to the downloaded PDF report when generation succeeds'
+  pdf_report_password_path:
+    description: 'Absolute path to the downloaded PDF report password file when generation succeeds'
 branding:
   icon: 'shield'
   color: 'blue'

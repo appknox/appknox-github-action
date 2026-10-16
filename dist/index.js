@@ -29394,7 +29394,7 @@ module.exports = v4;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.binaryVersion = exports.RiskThresholdOptions = exports.SarifOptions = exports.Inputs = void 0;
+exports.binaryVersion = exports.ExploitLikelihoodOptions = exports.ThresholdTypeOptions = exports.RiskThresholdOptions = exports.SarifOptions = exports.Outputs = exports.Inputs = void 0;
 var Inputs;
 (function (Inputs) {
     Inputs["AppknoxAccessToken"] = "appknox_access_token";
@@ -29403,7 +29403,16 @@ var Inputs;
     Inputs["Sarif"] = "sarif";
     Inputs["SastTimeout"] = "sast_timeout";
     Inputs["HealthScore"] = "health_score";
+    Inputs["ThresholdType"] = "threshold_type";
+    Inputs["ExploitLikelihoodThreshold"] = "exploit_likelihood_threshold";
+    Inputs["TriggerKnoxiq"] = "trigger_knoxiq";
+    Inputs["GeneratePdfReport"] = "generate_pdf_report";
 })(Inputs = exports.Inputs || (exports.Inputs = {}));
+var Outputs;
+(function (Outputs) {
+    Outputs["PdfReportPath"] = "pdf_report_path";
+    Outputs["PdfReportPasswordPath"] = "pdf_report_password_path";
+})(Outputs = exports.Outputs || (exports.Outputs = {}));
 var SarifOptions;
 (function (SarifOptions) {
     /**
@@ -29434,72 +29443,37 @@ var RiskThresholdOptions;
      */
     RiskThresholdOptions["CRITICAL"] = "CRITICAL";
 })(RiskThresholdOptions = exports.RiskThresholdOptions || (exports.RiskThresholdOptions = {}));
-exports.binaryVersion = '1.8.5';
-
-
-/***/ }),
-
-/***/ 6144:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const core = __importStar(__nccwpck_require__(2186));
-const tool_1 = __nccwpck_require__(302);
-const input_helper_1 = __nccwpck_require__(6455);
-function run() {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const inputs = (0, input_helper_1.getInputs)();
-            core.exportVariable('APPKNOX_ACCESS_TOKEN', inputs.appknoxAccessToken);
-            yield (0, tool_1.whoami)();
-            const fileID = yield (0, tool_1.upload)(inputs.filePath);
-            const sarif = inputs.sarif;
-            const sastTimeout = inputs.sastTimeout;
-            if (sarif == 'Enable') {
-                yield (0, tool_1.sarifReport)(fileID);
-            }
-            yield (0, tool_1.cicheck)(inputs.riskThreshold, fileID, sastTimeout, inputs.healthScore);
-        }
-        catch (err) {
-            core.setFailed(err.message);
-        }
-    });
-}
-run();
+var ThresholdTypeOptions;
+(function (ThresholdTypeOptions) {
+    /**
+     * Fail CI based on the CVSS risk threshold
+     */
+    ThresholdTypeOptions["RISK"] = "RISK";
+    /**
+     * Fail CI based on the security health score
+     */
+    ThresholdTypeOptions["HEALTH_SCORE"] = "HEALTH_SCORE";
+    /**
+     * Fail CI based on the KnoxIQ exploit likelihood of triaged vulnerabilities
+     */
+    ThresholdTypeOptions["EXPLOIT_LIKELIHOOD"] = "EXPLOIT_LIKELIHOOD";
+})(ThresholdTypeOptions = exports.ThresholdTypeOptions || (exports.ThresholdTypeOptions = {}));
+var ExploitLikelihoodOptions;
+(function (ExploitLikelihoodOptions) {
+    /**
+     * Fail CI when a triaged vulnerability has exploit likelihood LOW or higher
+     */
+    ExploitLikelihoodOptions["LOW"] = "LOW";
+    /**
+     * Fail CI when a triaged vulnerability has exploit likelihood MEDIUM or higher
+     */
+    ExploitLikelihoodOptions["MEDIUM"] = "MEDIUM";
+    /**
+     * Fail CI when a triaged vulnerability has exploit likelihood HIGH
+     */
+    ExploitLikelihoodOptions["HIGH"] = "HIGH";
+})(ExploitLikelihoodOptions = exports.ExploitLikelihoodOptions || (exports.ExploitLikelihoodOptions = {}));
+exports.binaryVersion = '1.8.9';
 
 
 /***/ }),
@@ -29547,45 +29521,274 @@ function getInputs() {
     const sastTimeout = core.getInput(constants_1.Inputs.SastTimeout, { required: false }) || 30; // Default to 30 minutes if not specified
     const sarifStringInput = core.getInput(constants_1.Inputs.Sarif) || constants_1.SarifOptions.Disable;
     const sarifString = constants_1.SarifOptions[sarifStringInput];
+    const triggerKnoxiq = core.getBooleanInput(constants_1.Inputs.TriggerKnoxiq);
+    const generatePdfReport = core.getBooleanInput(constants_1.Inputs.GeneratePdfReport);
     if (!sarifString) {
         throw new Error(`Unrecognized ${constants_1.Inputs.Sarif} input. Provided: ${sarifStringInput}. Available options: ${Object.keys(constants_1.SarifOptions)}`);
     }
-    const riskThresholdInput = core.getInput(constants_1.Inputs.RiskThreshold);
-    const healthScoreInput = core.getInput(constants_1.Inputs.HealthScore);
-    if (riskThresholdInput && healthScoreInput) {
-        throw new Error('Only one of risk_threshold or health_score may be provided, not both.');
-    }
-    let riskThreshold;
-    let healthScore;
-    if (!riskThresholdInput && !healthScoreInput) {
-        core.warning('Neither risk_threshold nor health_score was provided. Defaulting to risk_threshold: LOW. ' +
-            'Please explicitly set one of these inputs in your workflow.');
-        riskThreshold = constants_1.RiskThresholdOptions.LOW;
-    }
-    if (riskThresholdInput) {
-        riskThreshold = constants_1.RiskThresholdOptions[riskThresholdInput];
-        if (!riskThreshold) {
-            throw new Error(`Unrecognized ${constants_1.Inputs.RiskThreshold} input. Provided: ${riskThresholdInput}. Available options: ${Object.keys(constants_1.RiskThresholdOptions)}`);
-        }
-    }
-    if (healthScoreInput) {
-        const parsed = Number(healthScoreInput);
-        if (Number.isNaN(parsed) || parsed < 0 || parsed > 100) {
-            throw new Error(`Invalid ${constants_1.Inputs.HealthScore} input. Provided: ${healthScoreInput}. Must be a number between 0 and 100.`);
-        }
-        healthScore = parsed;
-    }
+    const threshold = resolveThreshold();
     const inputs = {
         appknoxAccessToken: accessToken,
         filePath: path,
-        riskThreshold: riskThreshold,
-        healthScore: healthScore,
+        threshold: threshold,
         sarif: sarifString,
-        sastTimeout: sastTimeout
+        sastTimeout: sastTimeout,
+        triggerKnoxiq: triggerKnoxiq,
+        generatePdfReport: generatePdfReport
     };
     return inputs;
 }
 exports.getInputs = getInputs;
+/**
+ * Resolves the single threshold to enforce. When threshold_type is not set,
+ * the type is inferred from risk_threshold / health_score for backward
+ * compatibility. When it is set, exactly one matching value is expected.
+ */
+function resolveThreshold() {
+    const thresholdTypeInput = core.getInput(constants_1.Inputs.ThresholdType);
+    const riskThresholdInput = core.getInput(constants_1.Inputs.RiskThreshold);
+    const healthScoreInput = core.getInput(constants_1.Inputs.HealthScore);
+    const exploitLikelihoodInput = core.getInput(constants_1.Inputs.ExploitLikelihoodThreshold);
+    if (exploitLikelihoodInput && !thresholdTypeInput) {
+        throw new Error(`${constants_1.Inputs.ExploitLikelihoodThreshold} requires ${constants_1.Inputs.ThresholdType}: ${constants_1.ThresholdTypeOptions.EXPLOIT_LIKELIHOOD}`);
+    }
+    if (!thresholdTypeInput) {
+        return resolveInferredThreshold(riskThresholdInput, healthScoreInput);
+    }
+    const thresholdType = constants_1.ThresholdTypeOptions[thresholdTypeInput];
+    if (!thresholdType) {
+        throw new Error(`Unrecognized ${constants_1.Inputs.ThresholdType} input. Provided: ${thresholdTypeInput}. Available options: ${Object.keys(constants_1.ThresholdTypeOptions)}`);
+    }
+    const strayThresholds = getStrayThresholds(thresholdType, {
+        [constants_1.Inputs.RiskThreshold]: riskThresholdInput,
+        [constants_1.Inputs.HealthScore]: healthScoreInput,
+        [constants_1.Inputs.ExploitLikelihoodThreshold]: exploitLikelihoodInput
+    });
+    if (strayThresholds.length > 0) {
+        throw new Error(`${constants_1.Inputs.ThresholdType} is ${thresholdType} but ${strayThresholds.join(' and ')} was also provided. Pick exactly one threshold.`);
+    }
+    switch (thresholdType) {
+        case constants_1.ThresholdTypeOptions.RISK: {
+            if (!riskThresholdInput) {
+                core.warning(`${constants_1.Inputs.ThresholdType} is ${constants_1.ThresholdTypeOptions.RISK} but ${constants_1.Inputs.RiskThreshold} was not provided. Defaulting to ${constants_1.Inputs.RiskThreshold}: ${constants_1.RiskThresholdOptions.LOW}.`);
+                return { type: thresholdType, value: constants_1.RiskThresholdOptions.LOW };
+            }
+            return {
+                type: thresholdType,
+                value: parseRiskThreshold(riskThresholdInput)
+            };
+        }
+        case constants_1.ThresholdTypeOptions.HEALTH_SCORE: {
+            if (!healthScoreInput) {
+                throw new Error(`${constants_1.Inputs.ThresholdType} is ${constants_1.ThresholdTypeOptions.HEALTH_SCORE} but ${constants_1.Inputs.HealthScore} was not provided.`);
+            }
+            return { type: thresholdType, value: parseHealthScore(healthScoreInput) };
+        }
+        case constants_1.ThresholdTypeOptions.EXPLOIT_LIKELIHOOD: {
+            if (!exploitLikelihoodInput) {
+                throw new Error(`${constants_1.Inputs.ThresholdType} is ${constants_1.ThresholdTypeOptions.EXPLOIT_LIKELIHOOD} but ${constants_1.Inputs.ExploitLikelihoodThreshold} was not provided.`);
+            }
+            const exploitLikelihood = constants_1.ExploitLikelihoodOptions[exploitLikelihoodInput];
+            if (!exploitLikelihood) {
+                throw new Error(`Unrecognized ${constants_1.Inputs.ExploitLikelihoodThreshold} input. Provided: ${exploitLikelihoodInput}. Available options: ${Object.keys(constants_1.ExploitLikelihoodOptions)}`);
+            }
+            return { type: thresholdType, value: exploitLikelihood };
+        }
+    }
+    // Unreachable while the switch covers every ThresholdTypeOptions member
+    throw new Error(`Unrecognized ${constants_1.Inputs.ThresholdType} input: ${thresholdType}`);
+}
+/**
+ * Threshold inputs that do not belong to the selected threshold type
+ */
+function getStrayThresholds(thresholdType, provided) {
+    const others = {
+        [constants_1.ThresholdTypeOptions.RISK]: [
+            constants_1.Inputs.HealthScore,
+            constants_1.Inputs.ExploitLikelihoodThreshold
+        ],
+        [constants_1.ThresholdTypeOptions.HEALTH_SCORE]: [
+            constants_1.Inputs.RiskThreshold,
+            constants_1.Inputs.ExploitLikelihoodThreshold
+        ],
+        [constants_1.ThresholdTypeOptions.EXPLOIT_LIKELIHOOD]: [
+            constants_1.Inputs.RiskThreshold,
+            constants_1.Inputs.HealthScore
+        ]
+    };
+    return others[thresholdType].filter(input => provided[input]);
+}
+/**
+ * Legacy behavior when threshold_type is not set: infer the type from the
+ * threshold value that was provided
+ */
+function resolveInferredThreshold(riskThresholdInput, healthScoreInput) {
+    if (riskThresholdInput && healthScoreInput) {
+        throw new Error('Only one of risk_threshold or health_score may be provided, not both.');
+    }
+    if (riskThresholdInput) {
+        return {
+            type: constants_1.ThresholdTypeOptions.RISK,
+            value: parseRiskThreshold(riskThresholdInput)
+        };
+    }
+    if (healthScoreInput) {
+        return {
+            type: constants_1.ThresholdTypeOptions.HEALTH_SCORE,
+            value: parseHealthScore(healthScoreInput)
+        };
+    }
+    core.warning('Neither threshold_type nor risk_threshold/health_score was provided. ' +
+        'Defaulting to risk_threshold: LOW. Please explicitly set threshold_type in your workflow.');
+    return { type: constants_1.ThresholdTypeOptions.RISK, value: constants_1.RiskThresholdOptions.LOW };
+}
+function parseRiskThreshold(input) {
+    const riskThreshold = constants_1.RiskThresholdOptions[input];
+    if (!riskThreshold) {
+        throw new Error(`Unrecognized ${constants_1.Inputs.RiskThreshold} input. Provided: ${input}. Available options: ${Object.keys(constants_1.RiskThresholdOptions)}`);
+    }
+    return riskThreshold;
+}
+function parseHealthScore(input) {
+    const parsed = Number(input);
+    if (Number.isNaN(parsed) || parsed < 0 || parsed > 100) {
+        throw new Error(`Invalid ${constants_1.Inputs.HealthScore} input. Provided: ${input}. Must be a number between 0 and 100.`);
+    }
+    return parsed;
+}
+
+
+/***/ }),
+
+/***/ 7764:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.run = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const tool_1 = __nccwpck_require__(302);
+const constants_1 = __nccwpck_require__(9042);
+const input_helper_1 = __nccwpck_require__(6455);
+/**
+ * Uploads the binary, forcing KnoxIQ triage when the exploit-likelihood
+ * gate is selected (the gate only works against triaged results)
+ */
+function uploadFile(inputs) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const requestKnoxiq = inputs.triggerKnoxiq ||
+            inputs.threshold.type === constants_1.ThresholdTypeOptions.EXPLOIT_LIKELIHOOD;
+        if (requestKnoxiq && !inputs.triggerKnoxiq) {
+            core.info('Requesting KnoxIQ triage automatically because threshold_type is EXPLOIT_LIKELIHOOD');
+        }
+        return (0, tool_1.upload)(inputs.filePath, requestKnoxiq);
+    });
+}
+/**
+ * Runs the SARIF report when enabled, capturing any error so later steps
+ * still run
+ */
+function trySarif(sarif, fileID) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (sarif !== 'Enable') {
+            return undefined;
+        }
+        try {
+            yield (0, tool_1.sarifReport)(fileID);
+            return undefined;
+        }
+        catch (err) {
+            return err;
+        }
+    });
+}
+/** Runs the CI check, capturing the error so reporting can still run */
+function tryCicheck(inputs, fileID) {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            yield (0, tool_1.cicheck)(fileID, inputs.threshold, inputs.sastTimeout);
+            return undefined;
+        }
+        catch (err) {
+            return err;
+        }
+    });
+}
+/** Downloads the PDF report when enabled; failures warn instead of failing */
+function tryPdfReport(generatePdfReport, fileID) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!generatePdfReport) {
+            return;
+        }
+        try {
+            const reportPaths = yield (0, tool_1.pdfReport)(fileID);
+            core.setOutput(constants_1.Outputs.PdfReportPath, reportPaths.pdfPath);
+            core.setOutput(constants_1.Outputs.PdfReportPasswordPath, reportPaths.passwordPath);
+        }
+        catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            core.warning(`PDF report download failed: ${message}`);
+        }
+    });
+}
+function run() {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const inputs = (0, input_helper_1.getInputs)();
+            core.exportVariable('APPKNOX_ACCESS_TOKEN', inputs.appknoxAccessToken);
+            yield (0, tool_1.whoami)();
+            const fileID = yield uploadFile(inputs);
+            const sarifError = yield trySarif(inputs.sarif, fileID);
+            const ciCheckError = yield tryCicheck(inputs, fileID);
+            yield tryPdfReport(inputs.generatePdfReport, fileID);
+            // The CI check result outranks a SARIF failure
+            if (ciCheckError) {
+                throw ciCheckError;
+            }
+            if (sarifError) {
+                throw sarifError;
+            }
+        }
+        catch (err) {
+            const message = err instanceof Error ? err.message : String(err);
+            core.setFailed(message);
+        }
+    });
+}
+exports.run = run;
 
 
 /***/ }),
@@ -29631,9 +29834,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.cicheck = exports.sarifReport = exports.upload = exports.whoami = void 0;
-const node_path_1 = __importDefault(__nccwpck_require__(9411));
-const node_fs_1 = __importDefault(__nccwpck_require__(7561));
+exports.cicheck = exports.pdfReport = exports.sarifReport = exports.upload = exports.whoami = void 0;
+const path_1 = __importDefault(__nccwpck_require__(1017));
+const fs_1 = __importDefault(__nccwpck_require__(7147));
 const tc = __importStar(__nccwpck_require__(7784));
 const exec = __importStar(__nccwpck_require__(1514));
 const constants_1 = __nccwpck_require__(9042);
@@ -29664,7 +29867,7 @@ function downloadAppknoxCLI(platform) {
     return __awaiter(this, void 0, void 0, function* () {
         const url = getAppknoxDownloadURL(platform);
         const appknoxPath = yield tc.downloadTool(url);
-        node_fs_1.default.chmodSync(appknoxPath, '755');
+        fs_1.default.chmodSync(appknoxPath, '755');
         return appknoxPath;
     });
 }
@@ -29672,11 +29875,11 @@ function getAppknoxToolPath() {
     return __awaiter(this, void 0, void 0, function* () {
         const foundPath = tc.find('appknox', constants_1.binaryVersion);
         if (foundPath) {
-            return node_path_1.default.join(foundPath, 'appknox');
+            return path_1.default.join(foundPath, 'appknox');
         }
         const appknoxPath = yield downloadAppknoxCLI(process.platform);
         yield tc.cacheFile(appknoxPath, 'appknox', 'appknox', constants_1.binaryVersion);
-        return node_path_1.default.join(tc.find('appknox', constants_1.binaryVersion), 'appknox');
+        return path_1.default.join(tc.find('appknox', constants_1.binaryVersion), 'appknox');
     });
 }
 function execBinary(path, args) {
@@ -29713,25 +29916,30 @@ function whoami() {
     });
 }
 exports.whoami = whoami;
-function upload(file_path) {
+function upload(file_path, triggerKnoxiq = false) {
     return __awaiter(this, void 0, void 0, function* () {
         const toolPath = yield getAppknoxToolPath();
-        const combinedOutput = yield execBinary(toolPath, ['upload', file_path]);
+        const args = ['upload', file_path];
+        if (triggerKnoxiq) {
+            args.push('--knoxiq');
+        }
+        const combinedOutput = yield execBinary(toolPath, args);
         if (combinedOutput.code > 0) {
             const errArr = combinedOutput.err.split('\n').filter(Boolean);
             throw new Error(errArr[errArr.length - 1]);
         }
-        return Number.parseInt(combinedOutput.output);
+        const fileIDOutput = combinedOutput.output.trim();
+        if (!/^\d+$/.test(fileIDOutput)) {
+            throw new Error(`Upload did not return a valid numeric file ID. Output: ${fileIDOutput || '<empty>'}`);
+        }
+        return Number.parseInt(fileIDOutput, 10);
     });
 }
 exports.upload = upload;
 function sarifReport(fileID) {
     return __awaiter(this, void 0, void 0, function* () {
         const toolPath = yield getAppknoxToolPath();
-        const args = [
-            'sarif',
-            fileID.toString(),
-        ];
+        const args = ['sarif', fileID.toString()];
         const combinedOutput = yield execBinary(toolPath, args);
         if (combinedOutput.code > 0) {
             const errArr = combinedOutput.err.split('\n').filter(Boolean);
@@ -29744,7 +29952,46 @@ function sarifReport(fileID) {
     });
 }
 exports.sarifReport = sarifReport;
-function cicheck(riskThreshold, fileID, sastTimeout, healthScore) {
+/**
+ * Creates and downloads the password-protected PDF report for a file.
+ */
+function pdfReport(fileID) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const toolPath = yield getAppknoxToolPath();
+        const createResult = yield execBinary(toolPath, [
+            'reports',
+            'create',
+            fileID.toString()
+        ]);
+        const reportID = createResult.output.trim();
+        if (createResult.code > 0) {
+            const errArr = createResult.err.split('\n').filter(Boolean);
+            throw new Error(errArr[errArr.length - 1] || 'Report creation failed');
+        }
+        if (!/^\d+$/.test(reportID)) {
+            throw new Error('Report creation did not return a valid numeric report ID');
+        }
+        const downloadResult = yield execBinary(toolPath, [
+            'reports',
+            'download',
+            'pdf',
+            reportID
+        ]);
+        if (downloadResult.code > 0) {
+            const errArr = downloadResult.err.split('\n').filter(Boolean);
+            throw new Error(errArr[errArr.length - 1] || 'PDF report download failed');
+        }
+        const reportDirectory = path_1.default.resolve('reports', fileID.toString());
+        const pdfPath = path_1.default.join(reportDirectory, `report_${fileID}.pdf`);
+        const passwordPath = path_1.default.join(reportDirectory, `report_${fileID}_password.txt`);
+        if (!fs_1.default.existsSync(pdfPath) || !fs_1.default.existsSync(passwordPath)) {
+            throw new Error(`PDF report download completed but expected files were not found in ${reportDirectory}`);
+        }
+        return { pdfPath, passwordPath };
+    });
+}
+exports.pdfReport = pdfReport;
+function cicheck(fileID, threshold, sastTimeout) {
     return __awaiter(this, void 0, void 0, function* () {
         const toolPath = yield getAppknoxToolPath();
         const args = [
@@ -29753,11 +30000,16 @@ function cicheck(riskThreshold, fileID, sastTimeout, healthScore) {
             '--timeout',
             sastTimeout.toString()
         ];
-        if (riskThreshold !== undefined) {
-            args.push('--risk-threshold', riskThreshold);
-        }
-        else if (healthScore !== undefined) {
-            args.push('--health-score-threshold', healthScore.toString());
+        switch (threshold.type) {
+            case constants_1.ThresholdTypeOptions.RISK:
+                args.push('--risk-threshold', threshold.value);
+                break;
+            case constants_1.ThresholdTypeOptions.HEALTH_SCORE:
+                args.push('--health-score-threshold', threshold.value.toString());
+                break;
+            case constants_1.ThresholdTypeOptions.EXPLOIT_LIKELIHOOD:
+                args.push('--exploit-likelihood-threshold', threshold.value);
+                break;
         }
         const combinedOutput = yield execBinary(toolPath, args);
         if (combinedOutput.code > 0) {
@@ -29883,22 +30135,6 @@ module.exports = require("net");
 
 "use strict";
 module.exports = require("node:events");
-
-/***/ }),
-
-/***/ 7561:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("node:fs");
-
-/***/ }),
-
-/***/ 9411:
-/***/ ((module) => {
-
-"use strict";
-module.exports = require("node:path");
 
 /***/ }),
 
@@ -31693,12 +31929,18 @@ module.exports = parseParams
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
 /******/ 	
 /************************************************************************/
-/******/ 	
-/******/ 	// startup
-/******/ 	// Load entry module and return exports
-/******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __nccwpck_require__(6144);
-/******/ 	module.exports = __webpack_exports__;
-/******/ 	
+var __webpack_exports__ = {};
+// This entry need to be wrapped in an IIFE because it need to be in strict mode.
+(() => {
+"use strict";
+var exports = __webpack_exports__;
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+const run_1 = __nccwpck_require__(7764);
+(0, run_1.run)();
+
+})();
+
+module.exports = __webpack_exports__;
 /******/ })()
 ;
