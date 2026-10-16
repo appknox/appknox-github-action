@@ -158,6 +158,19 @@ _This example fails CI when a triaged vulnerability's exploit likelihood is at o
         exploit_likelihood_threshold: HIGH
 ```
 
+<!-- Output-log section ported from https://github.com/appknox/appknox-azure-extension/pull/35/changes -->
+#### View Output logs
+
+The step's progress and the CI check result can be viewed in the GitHub Actions run log. When KnoxIQ triage is enabled (`trigger_knoxiq`, or automatically when `threshold_type` is `EXPLOIT_LIKELIHOOD`), it runs (`Started` → `In progress` → `Completed`) before the gate is evaluated, so each finding is checked against the configured gate using its real-world exploit likelihood rather than raw CVSS severity. Findings KnoxIQ couldn't triage (exploit likelihood "Unknown") are flagged as "needs review" and excluded from the build decision — full details are available on the Appknox dashboard.
+
+**Example — build fails:** the gate is `exploit likelihood >= Low`, and 20 findings meet or exceed it, so the build fails. One additional finding is "needs review" and does not affect the outcome either way.
+
+![](images/console-vulnerability-summary.png)
+
+**Example — build passes:** the gate is `risk >= Critical`, and the only finding is "needs review" (exploit likelihood "Unknown"), so it's excluded from the decision — nothing breaches the gate and the build passes.
+
+![](images/exploit-threshold-log.png)
+
 ### Appknox Scan with KnoxIQ and a Downloadable PDF Report
 
 The action downloads the PDF and password file to `reports/<file-id>/`. Use the
